@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import Sidebar from './Sidebar';
 import { RefreshCw, UserCircle, LogOut } from 'lucide-react';
 
-export default function Layout({ session, perfil }) {
+export default function Layout({ session, perfil, configEmpresa }) {
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -18,11 +18,33 @@ export default function Layout({ session, perfil }) {
     <div className="layout-container">
       <Sidebar />
       <div className="main-content">
-        <header className="top-header">
-          <button className="btn btn-outline" onClick={syncApp}>
-            <RefreshCw size={16} className="text-primary" />
-            <span style={{ fontSize: '0.8rem' }}>Sincronizar Nube</span>
-          </button>
+        <header className="top-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          
+          <div className="flex items-center gap-3">
+            {configEmpresa?.logo_url && (
+              <img 
+                src={configEmpresa.logo_url} 
+                alt="Logo Empresa" 
+                style={{ height: '40px', objectFit: 'contain' }} 
+              />
+            )}
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-main)' }}>
+                {configEmpresa?.nombre_empresa || 'Microcréditos App'}
+              </h2>
+              {configEmpresa?.eslogan && (
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {configEmpresa.eslogan}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button className="btn btn-outline" onClick={syncApp}>
+              <RefreshCw size={16} className="text-primary" />
+              <span className="hidden sm:inline" style={{ fontSize: '0.8rem' }}>Sincronizar Nube</span>
+            </button>
           
           <div className="flex items-center gap-4 border-l border-subtle" style={{ paddingLeft: '1.5rem', borderLeft: '1px solid var(--border-subtle)' }}>
             <div className="flex items-center gap-2">

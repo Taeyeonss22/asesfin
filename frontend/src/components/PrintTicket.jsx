@@ -4,19 +4,14 @@ import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export default function PrintTicket() {
+export default function PrintTicket({ configEmpresa }) {
   const { id } = useParams(); // id del pago
   const [ticketData, setTicketData] = useState(null);
-  const [config, setConfig] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchTicket = async () => {
       try {
-        // Fetch company config
-        const { data: configData, error: err1 } = await supabase.from('configuracion_empresa').select('*').limit(1).single();
-        if (err1) throw err1;
-        if (configData) setConfig(configData);
 
       // Fetch payment with all joins
       const { data: pago, error: err2 } = await supabase
@@ -45,7 +40,7 @@ export default function PrintTicket() {
   }, [id]);
 
   if (error) return <div style={{ padding: 20, color: 'red' }}>Error: {error} (Verifica que corriste el script SQL)</div>;
-  if (!ticketData || !config) return <div style={{ padding: 20 }}>Generando ticket...</div>;
+  if (!ticketData || !configEmpresa) return <div style={{ padding: 20 }}>Generando ticket...</div>;
 
   return (
     <>
@@ -71,12 +66,27 @@ export default function PrintTicket() {
         `}
       </style>
       <div className="ticket">
-        <div className="center bold" style={{ fontSize: '14px', marginBottom: '5px' }}>
-          {config.nombre_empresa}
-        </div>
-        <div className="center">
-          {config.direccion}<br/>
-          Tel: {config.telefono}
+        {/* Encabezado */}
+        <div className="center" style={{ marginBottom: '10px' }}>
+          {configEmpresa?.logo_url && (
+            <img 
+              src={configEmpresa.logo_url} 
+              alt="Logo" 
+              style={{ maxWidth: '100%', height: 'auto', maxHeight: '60px', marginBottom: '5px' }} 
+            />
+          )}
+          <div className="bold" style={{ fontSize: '14px', marginBottom: '2px' }}>
+            {configEmpresa?.nombre_empresa || 'Empresa'}
+          </div>
+          {configEmpresa?.eslogan && (
+            <div style={{ fontSize: '10px', fontStyle: 'italic', marginBottom: '2px' }}>
+              {configEmpresa.eslogan}
+            </div>
+          )}
+          <div style={{ fontSize: '10px' }}>
+            {configEmpresa?.direccion}<br/>
+            Tel: {configEmpresa?.telefono}
+          </div>
         </div>
         
         <div className="divider"></div>

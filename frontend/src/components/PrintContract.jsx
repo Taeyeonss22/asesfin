@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-export default function PrintContract() {
+export default function PrintContract({ configEmpresa }) {
   const { id } = useParams();
   const [htmlContent, setHtmlContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -20,10 +20,6 @@ export default function PrintContract() {
         const { data: plantilla, error: err2 } = await supabase.from('plantillas_contratos').select('*').eq('tipo', credito.tipo).single();
         if (err2) throw err2;
         if (!plantilla) throw new Error("Plantilla no encontrada");
-
-        // Fetch company config
-        const { data: config, error: err3 } = await supabase.from('configuracion_empresa').select('*').limit(1).single();
-        if (err3) throw err3;
 
       let finalHtml = plantilla.contenido;
 
@@ -85,11 +81,38 @@ export default function PrintContract() {
     fetchContractData();
   }, [id]);
 
-  if (error) return <div style={{ padding: 20, color: 'red' }}>Error: {error} (Verifica que corriste el script SQL)</div>;
-  if (loading) return <div style={{ padding: 20 }}>Generando contrato...</div>;
+  if (loading) return <div style={{ padding: '2rem' }}>Cargando contrato...</div>;
+  if (error) return <div style={{ padding: '2rem', color: 'red' }}>Error: {error}</div>;
 
   return (
-    <div style={{ padding: '2cm', backgroundColor: '#fff', color: '#000', minHeight: '100vh' }}>
+    <div className="print-contract" style={{
+      padding: '2rem',
+      maxWidth: '800px',
+      margin: '0 auto',
+      fontFamily: 'serif',
+      lineHeight: '1.5',
+      color: '#000'
+    }}>
+      
+      {/* Encabezado */}
+      <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '2px solid #000', paddingBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+        {configEmpresa?.logo_url && (
+          <img 
+            src={configEmpresa.logo_url} 
+            alt="Logo" 
+            style={{ maxHeight: '80px', objectFit: 'contain' }} 
+          />
+        )}
+        <div>
+          <h1 style={{ margin: 0, fontSize: '24px' }}>{configEmpresa?.nombre_empresa || 'Empresa Financiera'}</h1>
+          {configEmpresa?.eslogan && (
+            <p style={{ margin: '0 0 5px 0', fontStyle: 'italic', color: '#555' }}>
+              {configEmpresa.eslogan}
+            </p>
+          )}
+          <p style={{ margin: 0, fontSize: '14px' }}>{configEmpresa?.direccion} | Tel: {configEmpresa?.telefono}</p>
+        </div>
+      </div>
       <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
     </div>
   );

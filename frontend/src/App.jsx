@@ -27,6 +27,7 @@ import { Toaster } from 'react-hot-toast';
 function App() {
   const [session, setSession] = useState(null);
   const [perfil, setPerfil] = useState(null);
+  const [configEmpresa, setConfigEmpresa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connectionError, setConnectionError] = useState(false);
 
@@ -36,11 +37,15 @@ function App() {
     try {
       const fetchPromise = (async () => {
         const { data: { session } } = await supabase.auth.getSession();
+        let currentConfig = null;
+        const { data: configData } = await supabase.from('configuracion_empresa').select('*').limit(1).single();
+        if (configData) currentConfig = configData;
+
         if (session) {
           const { data } = await supabase.from('perfiles').select('*').eq('id', session.user.id).single();
-          return { session, perfil: data };
+          return { session, perfil: data, configEmpresa: currentConfig };
         }
-        return { session: null, perfil: null };
+        return { session: null, perfil: null, configEmpresa: currentConfig };
       })();
 
       const timeoutPromise = new Promise((_, reject) => 
@@ -51,6 +56,7 @@ function App() {
       
       setSession(result.session);
       setPerfil(result.perfil);
+      setConfigEmpresa(result.configEmpresa);
     } catch (err) {
       console.error("Error al cargar la sesión inicial:", err);
       setConnectionError(true);
@@ -106,13 +112,13 @@ function App() {
       <GlobalNotifications session={session} />
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/print/contract/:id" element={session ? <PrintContract /> : <Navigate to="/" />} />
-        <Route path="/print/ticket/:id" element={session ? <PrintTicket /> : <Navigate to="/" />} />
+        <Route path="/print/contract/:id" element={session ? <PrintContract configEmpresa={configEmpresa} /> : <Navigate to="/" />} />
+        <Route path="/print/ticket/:id" element={session ? <PrintTicket configEmpresa={configEmpresa} /> : <Navigate to="/" />} />
         
         {/* Protected Layout Routes */}
         <Route 
           path="/" 
-          element={session && perfil ? <Layout session={session} perfil={perfil} /> : <Navigate to="/login" />}
+          element={session && perfil ? <Layout session={session} perfil={perfil} configEmpresa={configEmpresa} /> : <Navigate to="/login" />}
         >
           <Route index element={<Dashboard session={session} perfil={perfil} />} />
           <Route path="creditos-individuales" element={<CreditosIndividuales session={session} />} />
