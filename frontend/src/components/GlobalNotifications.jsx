@@ -12,11 +12,21 @@ export default function GlobalNotifications({ session }) {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pagos' }, async (payload) => {
         const newPagoId = payload.new.id;
         
-        // Fetch the hydrated data from the view
-        const { data, error } = await supabase
-          .from('vista_feed_pagos')
-          .select('cliente_nombre, monto, cobrador_nombre, tipo_pago')
-          .eq('pago_id', newPagoId)
+        // Fetch the hydrated data directly from the tables
+        const { data: rawData, error } = await supabase
+          .from('pagos')
+          .select(`
+            id,
+            monto,
+            tipo,
+            creditos (
+              nombre_cliente,
+              clientes ( nombre_completo ),
+              grupos ( nombre )
+            ),
+            perfiles ( nombre_completo )
+          `)
+          .eq('id', newPagoId)
           .single();
           
         if (error) {
@@ -24,7 +34,13 @@ export default function GlobalNotifications({ session }) {
           return;
         }
         
-        if (data) {
+        if (rawData) {
+          const data = {
+            cliente_nombre: rawData.creditos?.clientes?.nombre_completo || rawData.creditos?.grupos?.nombre || rawData.creditos?.nombre_cliente || 'Cliente',
+            monto: rawData.monto,
+            cobrador_nombre: rawData.perfiles?.nombre_completo || 'Cobrador',
+            tipo_pago: rawData.tipo
+          };
           const formattedAmount = `$${data.monto?.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
           
           toast.custom((t) => (

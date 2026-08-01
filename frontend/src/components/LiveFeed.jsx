@@ -13,15 +13,54 @@ export default function LiveFeed({ perfil }) {
 
   const fetchPagos = async () => {
     const { data, error } = await supabase
-      .from('vista_feed_pagos')
-      .select('*')
+      .from('pagos')
+      .select(`
+        id,
+        credito_id,
+        monto,
+        tipo,
+        fecha_pago,
+        registrado_por,
+        latitud,
+        longitud,
+        evidencia_url,
+        creditos (
+          zona_id,
+          nombre_cliente,
+          tipo,
+          clientes ( nombre_completo ),
+          grupos ( nombre )
+        ),
+        perfiles (
+          nombre_completo
+        ),
+        pagos_metadata (
+          latitud,
+          longitud,
+          evidencia_url
+        )
+      `)
       .order('fecha_pago', { ascending: false })
       .limit(10); // Show last 10 for dashboard
 
     if (error) {
       console.error('Error fetching feed:', error);
-    } else {
-      setPagos(data);
+    } else if (data) {
+      const formatted = data.map(p => ({
+        pago_id: p.id,
+        credito_id: p.credito_id,
+        zona_id: p.creditos?.zona_id,
+        monto: p.monto,
+        tipo_pago: p.tipo,
+        fecha_pago: p.fecha_pago,
+        registrado_por: p.registrado_por,
+        latitud: (Array.isArray(p.pagos_metadata) ? p.pagos_metadata[0]?.latitud : p.pagos_metadata?.latitud) || p.latitud,
+        longitud: (Array.isArray(p.pagos_metadata) ? p.pagos_metadata[0]?.longitud : p.pagos_metadata?.longitud) || p.longitud,
+        evidencia_url: (Array.isArray(p.pagos_metadata) ? p.pagos_metadata[0]?.evidencia_url : p.pagos_metadata?.evidencia_url) || p.evidencia_url,
+        cobrador_nombre: p.perfiles?.nombre_completo || 'Cobrador',
+        cliente_nombre: p.creditos?.clientes?.nombre_completo || p.creditos?.grupos?.nombre || p.creditos?.nombre_cliente || 'Cliente'
+      }));
+      setPagos(formatted);
     }
   };
 
