@@ -49,7 +49,7 @@ export default function Dashboard({ session, perfil }) {
 
       {/* Live Feed Row */}
       <div className="mt-6">
-        <LiveFeed key={`feed-${metricsKey}`} />
+        <LiveFeed key={`feed-${metricsKey}`} perfil={perfil} />
       </div>
 
       {showCreditForm && (

@@ -39,11 +39,17 @@ export const SyncService = {
 
     for (const pago of queue) {
       try {
-        const { error } = await supabase.from('pagos').insert([pago]);
+        const { latitud, longitud, evidencia_url, local_uri, ...pagoBasico } = pago;
+        const { data, error } = await supabase.from('pagos').insert([pagoBasico]).select();
         if (error) {
           console.error('Error syncing pago:', pago, error);
           remainingQueue.push(pago); // Keep in queue if failed
         } else {
+          if (latitud || longitud || evidencia_url) {
+            const metadata = { pago_id: data[0].id, latitud, longitud, evidencia_url };
+            const { error: metaError } = await supabase.from('pagos_metadata').insert([metadata]);
+            if (metaError) console.error('Error syncing pago metadata:', metaError);
+          }
           syncedCount++;
         }
       } catch (e) {

@@ -195,8 +195,31 @@ export default function CobroScreen({ route }) {
       };
 
       if (isOnline) {
-        const { error } = await supabase.from('pagos').insert(inserts);
+        const pagosInserts = inserts.map(ins => {
+          const { latitud, longitud, evidencia_url, local_uri, ...rest } = ins;
+          return rest;
+        });
+
+        const { data, error } = await supabase.from('pagos').insert(pagosInserts).select();
         if (error) throw error;
+        
+        const metadataInserts = data.map((insertedPago, index) => {
+           const originalInsert = inserts[index];
+           if (originalInsert.latitud || originalInsert.longitud || originalInsert.evidencia_url) {
+               return {
+                   pago_id: insertedPago.id,
+                   latitud: originalInsert.latitud,
+                   longitud: originalInsert.longitud,
+                   evidencia_url: originalInsert.evidencia_url
+               };
+           }
+           return null;
+        }).filter(Boolean);
+
+        if (metadataInserts.length > 0) {
+           const { error: metadataError } = await supabase.from('pagos_metadata').insert(metadataInserts);
+           if (metadataError) throw metadataError;
+        }
         
         const { data: configData } = await supabase.from('configuracion_empresa').select('*').limit(1).single();
         

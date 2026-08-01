@@ -3,9 +3,13 @@ import { supabase } from '../lib/supabase';
 import { Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import PaymentDetailModal from './PaymentDetailModal';
 
-export default function LiveFeed() {
+export default function LiveFeed({ perfil }) {
   const [pagos, setPagos] = useState([]);
+  const [selectedPago, setSelectedPago] = useState(null);
+
+  const canViewDetail = perfil && perfil.rol !== 'cobrador';
 
   const fetchPagos = async () => {
     const { data, error } = await supabase
@@ -55,7 +59,12 @@ export default function LiveFeed() {
       ) : (
         <div className="feed-list">
           {pagos.map((pago, idx) => (
-            <div key={pago.pago_id} className="feed-item">
+            <div 
+              key={pago.pago_id} 
+              className={`feed-item ${canViewDetail ? 'cursor-pointer hover:bg-slate-800' : ''}`}
+              onClick={() => canViewDetail && setSelectedPago(pago)}
+              style={canViewDetail ? { transition: 'background 0.2s' } : {}}
+            >
               <div className="feed-item-left">
                 <div className="feed-badge">#{idx + 1}</div>
                 <div>
@@ -77,6 +86,10 @@ export default function LiveFeed() {
             </div>
           ))}
         </div>
+      )}
+      
+      {selectedPago && (
+        <PaymentDetailModal pago={selectedPago} onClose={() => setSelectedPago(null)} />
       )}
     </div>
   );

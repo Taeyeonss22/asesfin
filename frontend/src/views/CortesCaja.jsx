@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { exportToCSV } from '../lib/exportUtils';
+import PaymentDetailModal from '../components/PaymentDetailModal';
 import { FileText, CheckCircle, Search, Calendar, ChevronRight, X, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -13,6 +15,7 @@ export default function CortesCaja({ session }) {
   const [selectedCorte, setSelectedCorte] = useState(null);
   const [cortePagos, setCortePagos] = useState([]);
   const [notas, setNotas] = useState('');
+  const [selectedPagoDetail, setSelectedPagoDetail] = useState(null);
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
@@ -50,7 +53,8 @@ export default function CortesCaja({ session }) {
         .from('pagos')
         .select(`
           *,
-          creditos (nombre_cliente, credito_id, tipo)
+          creditos (nombre_cliente, credito_id, tipo),
+          pagos_metadata (latitud, longitud, evidencia_url)
         `)
         .eq('corte_id', corte.id)
         .order('fecha_pago', { ascending: true });
@@ -219,7 +223,19 @@ export default function CortesCaja({ session }) {
                         <tr><td colSpan="4" className="text-center text-muted">Cargando...</td></tr>
                       ) : (
                         cortePagos.map(p => (
-                          <tr key={p.id}>
+                          <tr 
+                            key={p.id} 
+                            className="cursor-pointer hover:bg-slate-800 transition-colors"
+                            onClick={() => setSelectedPagoDetail({
+                              ...p,
+                              latitud: p.pagos_metadata?.[0]?.latitud || p.pagos_metadata?.latitud,
+                              longitud: p.pagos_metadata?.[0]?.longitud || p.pagos_metadata?.longitud,
+                              evidencia_url: p.pagos_metadata?.[0]?.evidencia_url || p.pagos_metadata?.evidencia_url,
+                              tipo_pago: p.tipo,
+                              cliente_nombre: p.creditos?.nombre_cliente || p.credito_id.substring(0,8),
+                              cobrador_nombre: selectedCorte.perfiles?.nombre_completo // already filtered by cobrador
+                            })}
+                          >
                             <td className="text-xs text-muted">{new Date(p.fecha_pago).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
                             <td className="text-sm font-semibold">{p.creditos?.nombre_cliente || p.credito_id.substring(0,8)}</td>
                             <td>
@@ -288,6 +304,10 @@ export default function CortesCaja({ session }) {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedPagoDetail && (
+        <PaymentDetailModal pago={selectedPagoDetail} onClose={() => setSelectedPagoDetail(null)} />
       )}
     </div>
   );
