@@ -118,7 +118,7 @@ function App() {
         {/* Protected Layout Routes */}
         <Route 
           path="/" 
-          element={session && perfil ? <Layout session={session} perfil={perfil} configEmpresa={configEmpresa} /> : <Navigate to="/login" />}
+          element={session ? (perfil ? <Layout session={session} perfil={perfil} configEmpresa={configEmpresa} /> : <div className="auth-wrapper"><div className="glass-card auth-card text-center"><h3 className="text-danger mb-4">Perfil no encontrado</h3><p className="text-muted mb-6">Tu usuario existe pero no tiene un perfil asociado en la base de datos. Contacta al administrador.</p><button className="btn btn-primary w-full" onClick={() => supabase.auth.signOut()}>Cerrar sesión</button></div></div>) : <Navigate to="/login" />}
         >
           <Route index element={<Dashboard session={session} perfil={perfil} />} />
           <Route path="creditos-individuales" element={<CreditosIndividuales session={session} />} />
