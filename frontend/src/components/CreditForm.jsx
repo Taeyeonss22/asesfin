@@ -124,8 +124,14 @@ export default function CreditForm({ onClose, session }) {
         throw new Error("El monto otorgado debe ser mayor a 0");
       }
 
-      const totalAPagar = montoOtorgadoFinal * (1 + (params.interes_porcentaje / 100));
-      const cuotaPeriodo = (montoOtorgadoFinal / 1000) * params.cuota_por_mil;
+      let numero_periodos = 16;
+      if (formData.periodicidad === 'DIARIA') numero_periodos = 20;
+      else if (formData.periodicidad === 'SEMANAL') numero_periodos = 16;
+      else if (formData.periodicidad === 'CATORCENAL' || formData.periodicidad === 'QUINCENAL') numero_periodos = 8;
+      else if (formData.periodicidad === 'MENSUAL') numero_periodos = 4;
+
+      const totalAPagar = montoOtorgadoFinal * 1.20;
+      const cuotaPeriodo = totalAPagar / numero_periodos;
 
       // 1. Insert Credito (Parent)
       const payload = {
@@ -138,7 +144,7 @@ export default function CreditForm({ onClose, session }) {
         cuota_periodo: cuotaPeriodo,
         periodicidad: formData.periodicidad,
         fecha_inicio: formData.fecha_inicio,
-        numero_periodos: params.numero_periodos_default,
+        numero_periodos: numero_periodos,
         creado_por: session.user.id
       };
 
@@ -159,8 +165,8 @@ export default function CreditForm({ onClose, session }) {
             cliente_id: int.cliente_id,
             nombre_completo: int.nombre_completo,
             monto_otorgado: m,
-            total_a_pagar: m * (1 + (params.interes_porcentaje / 100)),
-            cuota_periodo: (m / 1000) * params.cuota_por_mil,
+            total_a_pagar: m * 1.20,
+            cuota_periodo: (m * 1.20) / numero_periodos,
             monto_garantia: parseFloat(int.monto_garantia) || 0,
           };
         });
