@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import Select from 'react-select';
 
 export default function CreditForm({ onClose, session }) {
   const [loading, setLoading] = useState(false);
@@ -240,12 +241,22 @@ export default function CreditForm({ onClose, session }) {
             <>
               <div className="form-group">
                 <label>Seleccionar Cliente (Libre)</label>
-                <select name="cliente_id" className="form-control" value={formData.cliente_id} onChange={handleChange} required>
-                  <option value="">-- Buscar / Seleccionar Cliente --</option>
-                  {clientesLibres.map(c => (
-                    <option key={c.id} value={c.id}>{c.nombre_completo}</option>
-                  ))}
-                </select>
+                <Select
+                  options={clientesLibres.map(c => ({ value: c.id, label: c.nombre_completo }))}
+                  value={formData.cliente_id ? { value: formData.cliente_id, label: clientesLibres.find(c => c.id === formData.cliente_id)?.nombre_completo } : null}
+                  onChange={(selected) => handleChange({ target: { name: 'cliente_id', value: selected ? selected.value : '' } })}
+                  placeholder="-- Buscar / Seleccionar Cliente --"
+                  isClearable
+                  isSearchable
+                  styles={{
+                    control: (base) => ({ ...base, background: 'rgba(255, 255, 255, 0.05)', borderColor: 'var(--border-subtle)', color: 'var(--text-main)' }),
+                    singleValue: (base) => ({ ...base, color: 'var(--text-main)' }),
+                    input: (base) => ({ ...base, color: 'var(--text-main)' }),
+                    menu: (base) => ({ ...base, background: 'var(--card-bg)', border: '1px solid var(--border-subtle)' }),
+                    option: (base, { isFocused }) => ({ ...base, background: isFocused ? 'rgba(59, 130, 246, 0.2)' : 'transparent', color: 'var(--text-main)', cursor: 'pointer' })
+                  }}
+                  required
+                />
                 {clientesLibres.length === 0 && <span className="text-xs text-danger mt-1">No hay clientes libres (o sin crédito).</span>}
               </div>
 
