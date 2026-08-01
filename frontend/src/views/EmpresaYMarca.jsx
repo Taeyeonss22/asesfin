@@ -242,6 +242,7 @@ export default function EmpresaYMarca() {
           )}
         </div>
       </div>
+      </div>
     </div>
   );
 }
