@@ -1,59 +1,107 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { CreditCard, RefreshCw, Search } from 'lucide-react';
+import { CreditCard, RefreshCw, Search, Plus, UserPlus } from 'lucide-react';
 
 export default function DirectorioClientes() {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    nombre_completo: '',
+    telefono: '',
+    direccion: ''
+  });
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState(null);
 
   const fetchClientes = async () => {
     setLoading(true);
     
-    // Fetch individuales
-    const { data: indData } = await supabase
-      .from('creditos')
-      .select('id, nombre_cliente, estado, monto_otorgado')
-      .eq('tipo', 'INDIVIDUAL')
-      .not('nombre_cliente', 'is', null);
+    const { data: clientesData, error } = await supabase
+      .from('clientes')
+      .select(`
+        id, 
+        nombre_completo, 
+        telefono, 
+        direccion,
+        creditos!creditos_cliente_id_fkey(estado, tipo, monto_otorgado),
+        grupo_integrantes(
+          grupos(
+            creditos(estado, tipo, monto_otorgado)
+          )
+        )
+      `)
+      .order('nombre_completo', { ascending: true });
 
-    // Fetch integrantes
-    const { data: grpData } = await supabase
-      .from('integrantes_grupo')
-      .select('id, nombre_completo, monto_otorgado, creditos(estado)');
+    if (!error && clientesData) {
+      const processed = clientesData.map(c => {
+        // Individual active
+        const activeInd = c.creditos?.find(cr => cr.estado === 'ACTIVO' || cr.estado === 'MORA');
+        
+        // Group active
+        const activeGrp = c.grupo_integrantes
+          ?.flatMap(gi => gi.grupos?.creditos || [])
+          ?.find(cr => cr.estado === 'ACTIVO' || cr.estado === 'MORA');
 
-    let combined = [];
-    
-    if (indData) {
-      combined = [...combined, ...indData.map(c => ({
-        id: c.id,
-        nombre: c.nombre_cliente,
-        tipo: 'Individual',
-        estado: c.estado,
-        monto_historico: c.monto_otorgado
-      }))];
+        let estado = 'LIBRE';
+        let tipoCreditoActivo = 'N/A';
+        
+        if (activeInd) {
+          estado = activeInd.estado;
+          tipoCreditoActivo = 'INDIVIDUAL';
+        } else if (activeGrp) {
+          estado = activeGrp.estado;
+          tipoCreditoActivo = 'GRUPAL';
+        }
+
+        return {
+          id: c.id,
+          nombre: c.nombre_completo,
+          telefono: c.telefono || 'Sin registro',
+          direccion: c.direccion || 'Sin registro',
+          estado,
+          tipoCreditoActivo
+        };
+      });
+      setClientes(processed);
     }
-    
-    if (grpData) {
-      combined = [...combined, ...grpData.map(c => ({
-        id: c.id,
-        nombre: c.nombre_completo,
-        tipo: 'Grupal (Integrante)',
-        estado: c.creditos?.estado || 'DESCONOCIDO',
-        monto_historico: c.monto_otorgado
-      }))];
-    }
-
-    // Sort alphabetically
-    combined.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    
-    setClientes(combined);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchClientes();
   }, []);
+
+  const handleCreateCliente = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError(null);
+
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .insert([{
+          nombre_completo: formData.nombre_completo.trim().toUpperCase(),
+          telefono: formData.telefono,
+          direccion: formData.direccion
+        }]);
+
+      if (error) {
+        if (error.code === '23505') throw new Error('Ya existe un cliente con ese nombre exacto.');
+        throw error;
+      }
+      
+      setShowForm(false);
+      setFormData({ nombre_completo: '', telefono: '', direccion: '' });
+      fetchClientes();
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   const filteredClientes = clientes.filter(c => 
     c.nombre.toLowerCase().includes(searchTerm.toLowerCase())
@@ -66,10 +114,15 @@ export default function DirectorioClientes() {
           <CreditCard size={24} className="text-primary" />
           <h1 style={{ margin: 0 }}>Acreditados / Clientes</h1>
         </div>
-        <button className="btn btn-outline" onClick={fetchClientes} disabled={loading}>
-          <RefreshCw size={16} className={loading ? 'loading-spinner' : ''} style={{ border: 'none' }} />
-          Actualizar
-        </button>
+        <div className="flex gap-4">
+          <button className="btn btn-outline" onClick={fetchClientes} disabled={loading}>
+            <RefreshCw size={16} className={loading ? 'loading-spinner' : ''} style={{ border: 'none' }} />
+            Actualizar
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <UserPlus size={16} /> Nuevo Cliente
+          </button>
+        </div>
       </div>
 
       <div className="solid-card">
@@ -92,29 +145,31 @@ export default function DirectorioClientes() {
             <thead>
               <tr>
                 <th>Nombre del Cliente</th>
-                <th>Tipo de Crédito</th>
-                <th>Estado del Crédito</th>
-                <th>Monto Histórico Asignado</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th>Estado</th>
+                <th>Crédito Activo</th>
               </tr>
             </thead>
             <tbody>
               {filteredClientes.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="text-center text-muted" style={{ padding: '3rem' }}>
+                  <td colSpan="5" className="text-center text-muted" style={{ padding: '3rem' }}>
                     {searchTerm ? 'No se encontraron clientes.' : 'No hay clientes registrados.'}
                   </td>
                 </tr>
               ) : (
-                filteredClientes.map((c, idx) => (
-                  <tr key={`${c.id}-${idx}`}>
+                filteredClientes.map((c) => (
+                  <tr key={c.id}>
                     <td className="font-medium">{c.nombre}</td>
-                    <td><span className="badge badge-default">{c.tipo}</span></td>
+                    <td>{c.telefono}</td>
+                    <td>{c.direccion}</td>
                     <td>
-                      <span className={`badge ${c.estado === 'ACTIVO' ? 'badge-active' : 'badge-paid'}`}>
+                      <span className={`badge ${c.estado === 'LIBRE' ? 'badge-paid' : (c.estado === 'ACTIVO' ? 'badge-active' : 'badge-danger')}`}>
                         {c.estado}
                       </span>
                     </td>
-                    <td>${parseFloat(c.monto_historico).toLocaleString()}</td>
+                    <td>{c.tipoCreditoActivo}</td>
                   </tr>
                 ))
               )}
@@ -122,6 +177,63 @@ export default function DirectorioClientes() {
           </table>
         </div>
       </div>
+
+      {showForm && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h3>Registrar Nuevo Cliente</h3>
+              <button className="modal-close" onClick={() => setShowForm(false)}>&times;</button>
+            </div>
+            
+            {formError && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateCliente}>
+              <div className="form-group">
+                <label>Nombre Completo</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={formData.nombre_completo}
+                  onChange={(e) => setFormData({...formData, nombre_completo: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Teléfono (Opcional)</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={formData.telefono}
+                  onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Dirección (Opcional)</label>
+                <textarea 
+                  className="form-control" 
+                  rows="2"
+                  value={formData.direccion}
+                  onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+                ></textarea>
+              </div>
+              
+              <div className="flex justify-between mt-6">
+                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={formLoading}>
+                  {formLoading ? 'Guardando...' : 'Guardar Cliente'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

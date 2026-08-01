@@ -6,19 +6,20 @@ export default function CreditForm({ onClose, session }) {
   const [error, setError] = useState(null);
   const [params, setParams] = useState(null);
   const [zonas, setZonas] = useState([]);
+  const [clientesLibres, setClientesLibres] = useState([]);
+  const [gruposLibres, setGruposLibres] = useState([]);
 
   const [formData, setFormData] = useState({
     zona_id: '',
     tipo: 'INDIVIDUAL',
-    nombre_cliente: '',
+    cliente_id: '',
+    grupo_id: '',
     monto_otorgado: '',
     periodicidad: 'SEMANAL',
     fecha_inicio: new Date().toISOString().split('T')[0],
   });
 
-  const [integrantes, setIntegrantes] = useState([
-    { nombre_completo: '', monto_otorgado: '', monto_garantia: 0 }
-  ]);
+  const [integrantes, setIntegrantes] = useState([]);
 
   useEffect(() => {
     // Fetch default parameters
@@ -36,21 +37,70 @@ export default function CreditForm({ onClose, session }) {
         }
       }
     });
+
+    // Fetch Clientes Libres
+    supabase.from('clientes')
+      .select('id, nombre_completo, creditos!creditos_cliente_id_fkey(estado), grupo_integrantes(grupos(creditos(estado)))')
+      .then(({data}) => {
+         if (data) {
+           const libres = data.filter(c => {
+             const actInd = c.creditos?.some(cr => cr.estado === 'ACTIVO' || cr.estado === 'MORA');
+             const actGrp = c.grupo_integrantes?.flatMap(gi => gi.grupos?.creditos || []).some(cr => cr.estado === 'ACTIVO' || cr.estado === 'MORA');
+             return !actInd && !actGrp;
+           });
+           setClientesLibres(libres);
+         }
+      });
+
+    // Fetch Grupos Libres
+    supabase.from('grupos')
+      .select('id, nombre, creditos(estado), grupo_integrantes(clientes(id, nombre_completo, creditos!creditos_cliente_id_fkey(estado), grupo_integrantes(grupos(creditos(estado)))))')
+      .then(({data}) => {
+         if (data) {
+           const libres = data.filter(g => {
+             const actGrp = g.creditos?.some(cr => cr.estado === 'ACTIVO' || cr.estado === 'MORA');
+             const actInt = g.grupo_integrantes?.some(gi => {
+               const c = gi.clientes;
+               if (!c) return false;
+               const intActInd = c.creditos?.some(cr => cr.estado === 'ACTIVO' || cr.estado === 'MORA');
+               const intActGrp = c.grupo_integrantes?.flatMap(x => x.grupos?.creditos || []).some(cr => cr.estado === 'ACTIVO' || cr.estado === 'MORA');
+               return intActInd || intActGrp;
+             });
+             return !actGrp && !actInt;
+           });
+           setGruposLibres(libres);
+         }
+      });
   }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleGroupSelect = (e) => {
+    const groupId = e.target.value;
+    setFormData({ ...formData, grupo_id: groupId });
+    
+    if (groupId) {
+      const group = gruposLibres.find(g => g.id === groupId);
+      if (group && group.grupo_integrantes) {
+        const ints = group.grupo_integrantes.map(gi => ({
+          cliente_id: gi.clientes.id,
+          nombre_completo: gi.clientes.nombre_completo,
+          monto_otorgado: '',
+          monto_garantia: 0
+        }));
+        setIntegrantes(ints);
+      }
+    } else {
+      setIntegrantes([]);
+    }
+  };
+
   const handleIntegranteChange = (index, field, value) => {
     const newIntegrantes = [...integrantes];
     newIntegrantes[index][field] = value;
     setIntegrantes(newIntegrantes);
-  };
-
-  const addIntegrante = () => {
-    if (integrantes.length >= 10) return;
-    setIntegrantes([...integrantes, { nombre_completo: '', monto_otorgado: '', monto_garantia: 0 }]);
   };
 
   const handleSubmit = async (e) => {
@@ -60,6 +110,8 @@ export default function CreditForm({ onClose, session }) {
 
     try {
       if (!params) throw new Error("Faltan parámetros del sistema para calcular cuotas.");
+      if (formData.tipo === 'INDIVIDUAL' && !formData.cliente_id) throw new Error("Debes seleccionar un cliente libre.");
+      if (formData.tipo === 'GRUPAL' && !formData.grupo_id) throw new Error("Debes seleccionar un grupo libre.");
 
       // Calculate totals
       let montoOtorgadoFinal = parseFloat(formData.monto_otorgado);
@@ -75,20 +127,23 @@ export default function CreditForm({ onClose, session }) {
       const cuotaPeriodo = (montoOtorgadoFinal / 1000) * params.cuota_por_mil;
 
       // 1. Insert Credito (Parent)
+      const payload = {
+        zona_id: formData.zona_id,
+        tipo: formData.tipo,
+        cliente_id: formData.tipo === 'INDIVIDUAL' ? formData.cliente_id : null,
+        grupo_id: formData.tipo === 'GRUPAL' ? formData.grupo_id : null,
+        monto_otorgado: montoOtorgadoFinal,
+        total_a_pagar: totalAPagar,
+        cuota_periodo: cuotaPeriodo,
+        periodicidad: formData.periodicidad,
+        fecha_inicio: formData.fecha_inicio,
+        numero_periodos: params.numero_periodos_default,
+        creado_por: session.user.id
+      };
+
       const { data: credito, error: creditoError } = await supabase
         .from('creditos')
-        .insert({
-          zona_id: formData.zona_id,
-          tipo: formData.tipo,
-          nombre_cliente: formData.tipo === 'INDIVIDUAL' ? formData.nombre_cliente : null,
-          monto_otorgado: montoOtorgadoFinal,
-          total_a_pagar: totalAPagar,
-          cuota_periodo: cuotaPeriodo,
-          periodicidad: formData.periodicidad,
-          fecha_inicio: formData.fecha_inicio,
-          numero_periodos: params.numero_periodos_default,
-          creado_por: session.user.id
-        })
+        .insert(payload)
         .select()
         .single();
 
@@ -100,6 +155,7 @@ export default function CreditForm({ onClose, session }) {
           const m = parseFloat(int.monto_otorgado) || 0;
           return {
             credito_id: credito.id,
+            cliente_id: int.cliente_id,
             nombre_completo: int.nombre_completo,
             monto_otorgado: m,
             total_a_pagar: m * (1 + (params.interes_porcentaje / 100)),
@@ -125,7 +181,7 @@ export default function CreditForm({ onClose, session }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div className="modal-content" style={{ maxWidth: formData.tipo === 'GRUPAL' ? '700px' : '450px' }}>
         <div className="modal-header">
           <h3>Nuevo Crédito</h3>
           <button className="modal-close" onClick={onClose}>&times;</button>
@@ -138,84 +194,112 @@ export default function CreditForm({ onClose, session }) {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Zona</label>
-            <select name="zona_id" className="form-control" value={formData.zona_id} onChange={handleChange} required>
-              <option value="">Selecciona una zona</option>
-              {zonas.map(z => (
-                <option key={z.id} value={z.id}>{z.nombre}</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label>Tipo de Crédito</label>
+              <select name="tipo" className="form-control" value={formData.tipo} onChange={(e) => {
+                handleChange(e);
+                setIntegrantes([]); // Reset on type change
+                setFormData(p => ({...p, tipo: e.target.value, cliente_id: '', grupo_id: ''}));
+              }}>
+                <option value="INDIVIDUAL">Individual</option>
+                <option value="GRUPAL">Grupal</option>
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label>Zona</label>
+              <select name="zona_id" className="form-control" value={formData.zona_id} onChange={handleChange} required>
+                <option value="">Selecciona una zona</option>
+                {zonas.map(z => (
+                  <option key={z.id} value={z.id}>{z.nombre}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Tipo de Crédito</label>
-            <select name="tipo" className="form-control" value={formData.tipo} onChange={handleChange}>
-              <option value="INDIVIDUAL">Individual</option>
-              <option value="GRUPAL">Grupal</option>
-            </select>
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label>Periodicidad</label>
+              <select name="periodicidad" className="form-control" value={formData.periodicidad} onChange={handleChange}>
+                <option value="DIARIA">Diaria</option>
+                <option value="SEMANAL">Semanal</option>
+                <option value="QUINCENAL">Quincenal</option>
+                <option value="CATORCENAL">Catorcenal</option>
+                <option value="MENSUAL">Mensual</option>
+              </select>
+            </div>
 
-          <div className="form-group">
-            <label>Periodicidad</label>
-            <select name="periodicidad" className="form-control" value={formData.periodicidad} onChange={handleChange}>
-              <option value="DIARIA">Diaria</option>
-              <option value="SEMANAL">Semanal</option>
-              <option value="QUINCENAL">Quincenal</option>
-              <option value="CATORCENAL">Catorcenal</option>
-              <option value="MENSUAL">Mensual</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Fecha de Inicio</label>
-            <input type="date" name="fecha_inicio" className="form-control" value={formData.fecha_inicio} onChange={handleChange} required />
+            <div className="form-group">
+              <label>Fecha de Inicio</label>
+              <input type="date" name="fecha_inicio" className="form-control" value={formData.fecha_inicio} onChange={handleChange} required />
+            </div>
           </div>
 
           {formData.tipo === 'INDIVIDUAL' && (
-            <div className="form-group">
-              <label>Nombre del Cliente</label>
-              <input type="text" name="nombre_cliente" className="form-control" value={formData.nombre_cliente} onChange={handleChange} required />
-            </div>
+            <>
+              <div className="form-group">
+                <label>Seleccionar Cliente (Libre)</label>
+                <select name="cliente_id" className="form-control" value={formData.cliente_id} onChange={handleChange} required>
+                  <option value="">-- Buscar / Seleccionar Cliente --</option>
+                  {clientesLibres.map(c => (
+                    <option key={c.id} value={c.id}>{c.nombre_completo}</option>
+                  ))}
+                </select>
+                {clientesLibres.length === 0 && <span className="text-xs text-danger mt-1">No hay clientes libres (o sin crédito).</span>}
+              </div>
+
+              <div className="form-group">
+                <label>Monto Otorgado ($)</label>
+                <input type="number" name="monto_otorgado" className="form-control" value={formData.monto_otorgado} onChange={handleChange} min="1" step="0.01" required />
+              </div>
+            </>
           )}
 
-          {formData.tipo === 'INDIVIDUAL' ? (
-            <div className="form-group">
-              <label>Monto Otorgado ($)</label>
-              <input type="number" name="monto_otorgado" className="form-control" value={formData.monto_otorgado} onChange={handleChange} min="1" step="0.01" required />
-            </div>
-          ) : (
-            <div className="mt-4">
-              <h4>Integrantes del Grupo (Max 10)</h4>
-              {integrantes.map((int, i) => (
-                <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', marginBottom: '1rem', marginTop: '1rem' }}>
-                  <div className="form-group">
-                    <label>Nombre del Integrante</label>
-                    <input type="text" className="form-control" value={int.nombre_completo} onChange={(e) => handleIntegranteChange(i, 'nombre_completo', e.target.value)} required />
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <label>Monto ($)</label>
-                      <input type="number" className="form-control" value={int.monto_otorgado} onChange={(e) => handleIntegranteChange(i, 'monto_otorgado', e.target.value)} min="1" step="0.01" required />
-                    </div>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <label>Garantía ($)</label>
-                      <input type="number" className="form-control" value={int.monto_garantia} onChange={(e) => handleIntegranteChange(i, 'monto_garantia', e.target.value)} min="0" step="0.01" />
-                    </div>
+          {formData.tipo === 'GRUPAL' && (
+            <>
+              <div className="form-group">
+                <label>Seleccionar Grupo (Libre)</label>
+                <select name="grupo_id" className="form-control" value={formData.grupo_id} onChange={handleGroupSelect} required>
+                  <option value="">-- Seleccionar Grupo --</option>
+                  {gruposLibres.map(g => (
+                    <option key={g.id} value={g.id}>{g.nombre}</option>
+                  ))}
+                </select>
+                {gruposLibres.length === 0 && <span className="text-xs text-danger mt-1">No hay grupos libres disponibles.</span>}
+              </div>
+
+              {formData.grupo_id && (
+                <div className="mt-4">
+                  <h4 className="text-muted text-sm uppercase tracking-wider mb-2">Montos por Integrante</h4>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    {integrantes.map((int, i) => (
+                      <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', mb: '1rem', border: '1px solid var(--border-subtle)' }} className="mb-4">
+                        <div className="font-bold mb-2 text-primary">{int.nombre_completo}</div>
+                        <div className="flex gap-4">
+                          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                            <label>Monto a Otorgar ($)</label>
+                            <input type="number" className="form-control" value={int.monto_otorgado} onChange={(e) => handleIntegranteChange(i, 'monto_otorgado', e.target.value)} min="1" step="0.01" required />
+                          </div>
+                          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                            <label>Monto Garantía ($)</label>
+                            <input type="number" className="form-control" value={int.monto_garantia} onChange={(e) => handleIntegranteChange(i, 'monto_garantia', e.target.value)} min="0" step="0.01" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {integrantes.length === 0 && (
+                      <div className="text-muted text-sm">Este grupo no tiene integrantes asignados.</div>
+                    )}
                   </div>
                 </div>
-              ))}
-              {integrantes.length < 10 && (
-                <button type="button" className="btn btn-outline mb-4" onClick={addIntegrante}>
-                  + Agregar Integrante
-                </button>
               )}
-            </div>
+            </>
           )}
 
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
             <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading || (formData.tipo === 'GRUPAL' && integrantes.length === 0)}>
               {loading ? 'Guardando...' : 'Crear Crédito'}
             </button>
           </div>
