@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Calculator } from 'lucide-react';
+import { addDays, addWeeks, addMonths } from 'date-fns';
 
 export default function PaymentForm({ credit, onClose, session }) {
   const [loading, setLoading] = useState(false);
@@ -158,6 +159,26 @@ export default function PaymentForm({ credit, onClose, session }) {
     }
   };
 
+  const getFechaProgramadaText = (num) => {
+    if (!credit.fecha_inicio) return '';
+    const fechaInicio = new Date(credit.fecha_inicio);
+    fechaInicio.setMinutes(fechaInicio.getMinutes() + fechaInicio.getTimezoneOffset());
+    
+    let fechaProgramada;
+    if (credit.periodicidad === 'SEMANAL') {
+      fechaProgramada = addWeeks(fechaInicio, num);
+    } else if (credit.periodicidad === 'QUINCENAL') {
+      fechaProgramada = addDays(fechaInicio, num * 15);
+    } else if (credit.periodicidad === 'MENSUAL') {
+      fechaProgramada = addMonths(fechaInicio, num);
+    } else if (credit.periodicidad === 'DIARIA') {
+      fechaProgramada = addDays(fechaInicio, num);
+    } else {
+      fechaProgramada = addWeeks(fechaInicio, num);
+    }
+    return ` - ${fechaProgramada.toLocaleDateString()}`;
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '900px' }}>
@@ -201,7 +222,7 @@ export default function PaymentForm({ credit, onClose, session }) {
               >
                 {Array.from({ length: credit.numero_periodos || 16 }, (_, i) => i + 1).map(num => (
                   <option key={num} value={num}>
-                    Semana {num} de {credit.numero_periodos || 16}
+                    Semana {num} de {credit.numero_periodos || 16} {getFechaProgramadaText(num)}
                   </option>
                 ))}
               </select>

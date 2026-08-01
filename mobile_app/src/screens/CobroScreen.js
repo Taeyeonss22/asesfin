@@ -12,6 +12,7 @@ import { Camera, MapPin, MapPinOff, Save, Calculator } from 'lucide-react-native
 import * as Network from 'expo-network';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
+import { addDays, addWeeks, addMonths } from 'date-fns';
 
 export default function CobroScreen({ route }) {
   const { credito, location: initialLocation, perfil } = route.params;
@@ -246,6 +247,26 @@ export default function CobroScreen({ route }) {
     }
   };
 
+  const getFechaProgramadaText = (num) => {
+    if (!credito.fecha_inicio) return '';
+    const fechaInicio = new Date(credito.fecha_inicio);
+    fechaInicio.setMinutes(fechaInicio.getMinutes() + fechaInicio.getTimezoneOffset());
+    
+    let fechaProgramada;
+    if (credito.periodicidad === 'SEMANAL') {
+      fechaProgramada = addWeeks(fechaInicio, num);
+    } else if (credito.periodicidad === 'QUINCENAL') {
+      fechaProgramada = addDays(fechaInicio, num * 15);
+    } else if (credito.periodicidad === 'MENSUAL') {
+      fechaProgramada = addMonths(fechaInicio, num);
+    } else if (credito.periodicidad === 'DIARIA') {
+      fechaProgramada = addDays(fechaInicio, num);
+    } else {
+      fechaProgramada = addWeeks(fechaInicio, num);
+    }
+    return ` - ${fechaProgramada.toLocaleDateString()}`;
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
       <Text style={styles.title}>Registrar Cobro</Text>
@@ -260,7 +281,7 @@ export default function CobroScreen({ route }) {
             dropdownIconColor="#fff"
           >
             {Array.from({ length: credito.numero_periodos || 16 }, (_, i) => i + 1).map(num => (
-              <Picker.Item key={num} label={`Semana ${num} de ${credito.numero_periodos || 16}`} value={num} />
+              <Picker.Item key={num} label={`Semana ${num} de ${credito.numero_periodos || 16} ${getFechaProgramadaText(num)}`} value={num} />
             ))}
           </Picker>
         </View>
