@@ -66,24 +66,85 @@ export default function EmpresaYMarca() {
           />
         </div>
         
-        <div className="form-group">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="form-group">
+            <label>R.U.C</label>
+            <input 
+              type="text" 
+              name="ruc" 
+              className="form-control" 
+              value={config?.ruc || ''} 
+              onChange={handleChange} 
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Propietario</label>
+            <input 
+              type="text" 
+              name="propietario" 
+              className="form-control" 
+              value={config?.propietario || ''} 
+              onChange={handleChange} 
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="form-group">
+            <label>E-mail</label>
+            <input 
+              type="email" 
+              name="email" 
+              className="form-control" 
+              value={config?.email || ''} 
+              onChange={handleChange} 
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Teléfono</label>
+            <input 
+              type="text" 
+              name="telefono" 
+              className="form-control" 
+              value={config?.telefono || ''} 
+              onChange={handleChange} 
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="form-group">
+            <label>Ciudad</label>
+            <input 
+              type="text" 
+              name="ciudad" 
+              className="form-control" 
+              value={config?.ciudad || ''} 
+              onChange={handleChange} 
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Sitio Web</label>
+            <input 
+              type="text" 
+              name="sitio_web" 
+              className="form-control" 
+              value={config?.sitio_web || ''} 
+              onChange={handleChange} 
+            />
+          </div>
+        </div>
+
+        <div className="form-group mb-6">
           <label>Dirección Oficial</label>
           <input 
             type="text" 
             name="direccion" 
             className="form-control" 
             value={config?.direccion || ''} 
-            onChange={handleChange} 
-          />
-        </div>
-        
-        <div className="form-group mb-6">
-          <label>Teléfono de Contacto</label>
-          <input 
-            type="text" 
-            name="telefono" 
-            className="form-control" 
-            value={config?.telefono || ''} 
             onChange={handleChange} 
           />
         </div>
