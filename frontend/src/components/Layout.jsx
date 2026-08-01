@@ -16,7 +16,7 @@ export default function Layout({ session, perfil, configEmpresa }) {
 
   return (
     <div className="layout-container">
-      <Sidebar />
+      <Sidebar configEmpresa={configEmpresa} />
       <div className="main-content">
         <header className="top-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           

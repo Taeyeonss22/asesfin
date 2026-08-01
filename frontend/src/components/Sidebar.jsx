@@ -13,7 +13,7 @@ import {
   Map
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ configEmpresa }) {
   const sections = [
     {
       title: 'OPERACIÓN PRINCIPAL',
@@ -46,14 +46,25 @@ export default function Sidebar() {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-logo-text">
-          <div style={{ width: '32px', height: '32px', background: 'var(--primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '18px', fontWeight: 'bold'}}>
-            M
-          </div>
-          MicroFinanzas
-          <span className="pro-badge">PRO</span>
+        <div className="sidebar-logo-text flex items-center gap-2">
+          {configEmpresa?.logo_url ? (
+            <img 
+              src={configEmpresa.logo_url} 
+              alt="Logo" 
+              style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '4px' }}
+            />
+          ) : (
+            <div style={{ width: '32px', height: '32px', background: 'var(--primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '18px', fontWeight: 'bold'}}>
+              {configEmpresa?.nombre_empresa ? configEmpresa.nombre_empresa.charAt(0).toUpperCase() : 'M'}
+            </div>
+          )}
+          <span style={{ fontSize: '1.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
+            {configEmpresa?.nombre_empresa || 'MicroFinanzas'}
+          </span>
         </div>
-        <div className="sidebar-logo-sub">Soluciones S.A. de C.V. S.F.P.</div>
+        <div className="sidebar-logo-sub" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {configEmpresa?.eslogan || 'Soluciones S.A. de C.V. S.F.P.'}
+        </div>
       </div>
 
       <div className="sidebar-nav">
