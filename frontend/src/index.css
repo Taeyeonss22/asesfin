@@ -549,11 +549,11 @@ tr:hover td {
   bottom: 0;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(4px);
-  display: flex;
+  display: grid;
+  align-items: start;
   justify-content: center;
-  align-items: flex-start;
   z-index: 50;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem;
   overflow-y: auto;
 }
 
@@ -563,9 +563,7 @@ tr:hover td {
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
-  margin: auto;
-  max-height: 90vh;
-  overflow-y: auto;
+  margin: 0;
   padding: 2rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   animation: fadeIn 0.3s ease;
