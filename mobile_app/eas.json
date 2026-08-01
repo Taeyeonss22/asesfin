@@ -9,10 +9,18 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://TU_URL.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "TU_ANON_KEY"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://TU_URL.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "TU_ANON_KEY"
+      }
     }
   },
   "submit": {
