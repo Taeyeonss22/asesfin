@@ -25,28 +25,7 @@ export default function Login() {
     }
   };
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      setError(null);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nombre_completo: email.split('@')[0],
-          }
-        }
-      });
-      if (error) throw error;
-      alert("Registro exitoso! Verifica tu email o inicia sesión.");
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Public signups are disabled. Users must be created via Admin Panel.
 
   return (
     <div className="auth-wrapper">
@@ -88,23 +67,15 @@ export default function Login() {
             />
           </div>
           
-          <div className="flex gap-4 mt-4">
+          <div className="mt-6">
             <button
-              className="btn btn-primary"
-              style={{ flex: 1 }}
+              className="btn btn-primary w-full"
+              style={{ width: '100%', justifyContent: 'center' }}
               onClick={handleLogin}
               disabled={loading}
             >
               <LogIn size={18} />
               {loading ? 'Cargando...' : 'Entrar'}
-            </button>
-            <button
-              className="btn btn-outline"
-              style={{ flex: 1 }}
-              onClick={handleSignUp}
-              disabled={loading}
-            >
-              Registrarse
             </button>
           </div>
         </form>

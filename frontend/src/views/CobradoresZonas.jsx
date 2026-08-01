@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Map, Shield, Users } from 'lucide-react';
+import { Map, Shield, Users, UserPlus, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function CobradoresZonas({ session }) {
   const [users, setUsers] = useState([]);
   const [zonas, setZonas] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newUser, setNewUser] = useState({
+    nombre_completo: '',
+    email: '',
+    password: '',
+    rol: 'COBRADOR',
+    zonas: []
+  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -36,13 +48,59 @@ export default function CobradoresZonas({ session }) {
     fetchData();
   };
 
+  const handleNewUserZoneToggle = (zonaId) => {
+    setNewUser(prev => {
+      const exists = prev.zonas.includes(zonaId);
+      if (exists) {
+        return { ...prev, zonas: prev.zonas.filter(id => id !== zonaId) };
+      } else {
+        return { ...prev, zonas: [...prev.zonas, zonaId] };
+      }
+    });
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!newUser.nombre_completo || !newUser.email || !newUser.password) {
+      toast.error('Llena los campos obligatorios');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      toast.loading('Creando usuario...', { id: 'create-user' });
+      
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: newUser
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success('Usuario creado con éxito', { id: 'create-user' });
+      setShowModal(false);
+      setNewUser({ nombre_completo: '', email: '', password: '', rol: 'COBRADOR', zonas: [] });
+      fetchData();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Error al crear usuario', { id: 'create-user' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="p-4 text-muted">Cargando personal...</div>;
 
   return (
-    <div className="animate-fade-in">
-      <div className="flex items-center gap-2 mb-6">
-        <Map size={24} className="text-primary" />
-        <h1 style={{ margin: 0 }}>Cobradores y Zonas</h1>
+    <div className="animate-fade-in relative">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Map size={24} className="text-primary" />
+          <h1 style={{ margin: 0 }}>Cobradores y Zonas</h1>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <UserPlus size={18} /> Nuevo Usuario
+        </button>
       </div>
       
       <div className="solid-card">
@@ -114,6 +172,89 @@ export default function CobradoresZonas({ session }) {
           </table>
         </div>
       </div>
+
+      {/* Modal Nuevo Usuario */}
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="solid-card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 style={{ margin: 0 }}>Crear Nuevo Usuario</h3>
+              <button className="btn btn-ghost" onClick={() => setShowModal(false)}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleCreateUser}>
+              <div className="form-group mb-4">
+                <label>Nombre Completo</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={newUser.nombre_completo}
+                  onChange={(e) => setNewUser({...newUser, nombre_completo: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group mb-4">
+                <label>Email</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group mb-4">
+                <label>Contraseña Temporal</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group mb-4">
+                <label>Rol</label>
+                <select 
+                  className="form-control"
+                  value={newUser.rol}
+                  onChange={(e) => setNewUser({...newUser, rol: e.target.value})}
+                >
+                  <option value="ADMIN">Administrador</option>
+                  <option value="OFICINA">Oficina / Call Center</option>
+                  <option value="COBRADOR">Cobrador de Campo</option>
+                </select>
+              </div>
+
+              {newUser.rol === 'COBRADOR' && (
+                <div className="form-group mb-6">
+                  <label>Zonas Asignadas Inicialmente</label>
+                  <div className="flex gap-4 flex-wrap mt-2 p-3" style={{ background: 'var(--bg-subtle)', borderRadius: '8px' }}>
+                    {zonas.map(z => (
+                      <label key={z.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', cursor: 'pointer' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={newUser.zonas.includes(z.id)} 
+                          onChange={() => handleNewUserZoneToggle(z.id)}
+                          style={{ accentColor: 'var(--primary)', width: '16px', height: '16px' }}
+                        />
+                        <span>{z.nombre}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 mt-6 border-t border-subtle pt-4">
+                <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
