@@ -28,18 +28,38 @@ function App() {
   const [session, setSession] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
+
+  const fetchSessionAndProfile = async () => {
+    setLoading(true);
+    setConnectionError(false);
+    try {
+      const fetchPromise = (async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data } = await supabase.from('perfiles').select('*').eq('id', session.user.id).single();
+          return { session, perfil: data };
+        }
+        return { session: null, perfil: null };
+      })();
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT')), 8000)
+      );
+
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      setSession(result.session);
+      setPerfil(result.perfil);
+    } catch (err) {
+      console.error("Error al cargar la sesión inicial:", err);
+      setConnectionError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSessionAndProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      if (session) {
-        const { data } = await supabase.from('perfiles').select('*').eq('id', session.user.id).single();
-        setPerfil(data);
-      }
-      setLoading(false);
-    };
-    
     fetchSessionAndProfile();
 
     const {
@@ -61,6 +81,22 @@ function App() {
     return (
       <div className="auth-wrapper">
         <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
+  if (connectionError) {
+    return (
+      <div className="auth-wrapper">
+        <div className="glass-card auth-card animate-fade-in text-center">
+          <h3 className="mb-4 text-danger">Problema de conexión</h3>
+          <p className="text-muted mb-6">
+            No pudimos conectarnos al servidor para verificar tu sesión. Revisa tu conexión a internet o la configuración del servidor.
+          </p>
+          <button className="btn btn-primary w-full" onClick={fetchSessionAndProfile}>
+            Reintentar
+          </button>
+        </div>
       </div>
     );
   }
