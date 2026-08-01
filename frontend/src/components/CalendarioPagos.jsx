@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { addDays, addWeeks, addMonths } from 'date-fns';
+import { addDays, addWeeks, addMonths, format } from 'date-fns';
 
 export default function CalendarioPagos({ creditoId }) {
   const [loading, setLoading] = useState(true);
@@ -158,13 +158,13 @@ export default function CalendarioPagos({ creditoId }) {
             {calendario.map(periodo => (
               <tr key={periodo.numero} className={periodo.estaVencido ? 'bg-red-500/10' : ''}>
                 <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{periodo.numero}</td>
-                <td>{periodo.fechaProgramada.toLocaleDateString()}</td>
+                <td>{format(periodo.fechaProgramada, 'dd/MM/yyyy')}</td>
                 <td style={{ textAlign: 'center' }}>${Number(credito.cuota_periodo).toLocaleString()}</td>
                 <td style={{ textAlign: 'center', color: periodo.totalAbonado > 0 ? 'var(--success)' : 'inherit' }}>
                   ${periodo.totalAbonado.toLocaleString()}
                   {periodo.pagos.length > 0 && (
                     <div className="text-xs text-muted">
-                      ({periodo.pagos[periodo.pagos.length-1].fecha_pago ? new Date(periodo.pagos[periodo.pagos.length-1].fecha_pago).toLocaleDateString() : 'N/A'})
+                      ({periodo.pagos[periodo.pagos.length-1].fecha_pago ? format(new Date(periodo.pagos[periodo.pagos.length-1].fecha_pago), 'dd/MM/yyyy') : 'N/A'})
                     </div>
                   )}
                 </td>

@@ -12,7 +12,7 @@ import { Camera, MapPin, MapPinOff, Save, Calculator } from 'lucide-react-native
 import * as Network from 'expo-network';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import { addDays, addWeeks, addMonths } from 'date-fns';
+import { addDays, addWeeks, addMonths, format } from 'date-fns';
 
 export default function CobroScreen({ route }) {
   const { credito, location: initialLocation, perfil } = route.params;
@@ -264,7 +264,7 @@ export default function CobroScreen({ route }) {
     } else {
       fechaProgramada = addWeeks(fechaInicio, num);
     }
-    return ` - ${fechaProgramada.toLocaleDateString()}`;
+    return ` - ${format(fechaProgramada, 'dd/MM/yyyy')}`;
   };
 
   return (

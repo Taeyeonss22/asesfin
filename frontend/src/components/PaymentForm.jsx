@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Calculator } from 'lucide-react';
-import { addDays, addWeeks, addMonths } from 'date-fns';
+import { addDays, addWeeks, addMonths, format } from 'date-fns';
 
 export default function PaymentForm({ credit, onClose, session }) {
   const [loading, setLoading] = useState(false);
@@ -176,7 +176,7 @@ export default function PaymentForm({ credit, onClose, session }) {
     } else {
       fechaProgramada = addWeeks(fechaInicio, num);
     }
-    return ` - ${fechaProgramada.toLocaleDateString()}`;
+    return ` - ${format(fechaProgramada, 'dd/MM/yyyy')}`;
   };
 
   return (
