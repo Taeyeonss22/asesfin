@@ -14,6 +14,18 @@ export default function PaymentForm({ credit, onClose, session }) {
   const [pagosGrupal, setPagosGrupal] = useState({}); // { id: { abono: '', ahorro: '', mora: '' } }
   
   const [successPagoId, setSuccessPagoId] = useState(null);
+  const [numeroPago, setNumeroPago] = useState(1);
+
+  useEffect(() => {
+    supabase.from('pagos').select('numero_pago').eq('credito_id', credit.credito_id).then(({data}) => {
+      if (data && data.length > 0) {
+        const maxPago = Math.max(...data.map(p => p.numero_pago || 0));
+        setNumeroPago(Math.min(maxPago + 1, credit.numero_periodos || 16));
+      } else {
+        setNumeroPago(1);
+      }
+    });
+  }, [credit.credito_id, credit.numero_periodos]);
 
   useEffect(() => {
     if (credit.tipo === 'GRUPAL') {
@@ -86,13 +98,13 @@ export default function PaymentForm({ credit, onClose, session }) {
 
         if (pAbono > 0) {
           if (pAbono > credit.saldo_pendiente) throw new Error("El abono no puede ser mayor al saldo pendiente");
-          inserts.push({ credito_id: credit.credito_id, integrante_id: null, monto: pAbono, tipo: 'ABONO', fecha_pago: timestamp, registrado_por: session.user.id });
+          inserts.push({ credito_id: credit.credito_id, integrante_id: null, monto: pAbono, tipo: 'ABONO', fecha_pago: timestamp, registrado_por: session.user.id, numero_pago: parseInt(numeroPago) });
         }
         if (pAhorro > 0) {
-          inserts.push({ credito_id: credit.credito_id, integrante_id: null, monto: pAhorro, tipo: 'AHORRO', fecha_pago: timestamp, registrado_por: session.user.id });
+          inserts.push({ credito_id: credit.credito_id, integrante_id: null, monto: pAhorro, tipo: 'AHORRO', fecha_pago: timestamp, registrado_por: session.user.id, numero_pago: parseInt(numeroPago) });
         }
         if (pMora > 0) {
-          inserts.push({ credito_id: credit.credito_id, integrante_id: null, monto: pMora, tipo: 'MORA', fecha_pago: timestamp, registrado_por: session.user.id });
+          inserts.push({ credito_id: credit.credito_id, integrante_id: null, monto: pMora, tipo: 'MORA', fecha_pago: timestamp, registrado_por: session.user.id, numero_pago: parseInt(numeroPago) });
         }
 
         if (inserts.length === 0) {
@@ -111,14 +123,14 @@ export default function PaymentForm({ credit, onClose, session }) {
 
           if (pAbono > 0) {
             if (pAbono > int.saldo_pendiente) throw new Error(`El abono de ${int.nombre_completo} supera su saldo pendiente`);
-            inserts.push({ credito_id: credit.credito_id, integrante_id: int.integrante_id, monto: pAbono, tipo: 'ABONO', fecha_pago: timestamp, registrado_por: session.user.id });
+            inserts.push({ credito_id: credit.credito_id, integrante_id: int.integrante_id, monto: pAbono, tipo: 'ABONO', fecha_pago: timestamp, registrado_por: session.user.id, numero_pago: parseInt(numeroPago) });
             totalAbonosGroup += pAbono;
           }
           if (pAhorro > 0) {
-            inserts.push({ credito_id: credit.credito_id, integrante_id: int.integrante_id, monto: pAhorro, tipo: 'AHORRO', fecha_pago: timestamp, registrado_por: session.user.id });
+            inserts.push({ credito_id: credit.credito_id, integrante_id: int.integrante_id, monto: pAhorro, tipo: 'AHORRO', fecha_pago: timestamp, registrado_por: session.user.id, numero_pago: parseInt(numeroPago) });
           }
           if (pMora > 0) {
-            inserts.push({ credito_id: credit.credito_id, integrante_id: int.integrante_id, monto: pMora, tipo: 'MORA', fecha_pago: timestamp, registrado_por: session.user.id });
+            inserts.push({ credito_id: credit.credito_id, integrante_id: int.integrante_id, monto: pMora, tipo: 'MORA', fecha_pago: timestamp, registrado_por: session.user.id, numero_pago: parseInt(numeroPago) });
           }
         }
 
@@ -179,6 +191,22 @@ export default function PaymentForm({ credit, onClose, session }) {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
+            <div className="mb-4 form-group">
+              <label>Periodo a Pagar</label>
+              <select 
+                className="form-control"
+                value={numeroPago}
+                onChange={(e) => setNumeroPago(e.target.value)}
+                required
+              >
+                {Array.from({ length: credit.numero_periodos || 16 }, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num}>
+                    Semana {num} de {credit.numero_periodos || 16}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {credit.tipo === 'INDIVIDUAL' ? (
               // VISTA PLANILLA INDIVIDUAL
               <div className="mb-6">

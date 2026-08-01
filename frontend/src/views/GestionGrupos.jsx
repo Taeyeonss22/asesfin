@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FolderKey, RefreshCw, Eye, Search, Plus, Calculator } from 'lucide-react';
 import PaymentForm from '../components/PaymentForm';
+import CalendarioPagos from '../components/CalendarioPagos';
 
 export default function GestionGrupos({ session }) {
   const [grupos, setGrupos] = useState([]);
@@ -292,6 +293,10 @@ export default function GestionGrupos({ session }) {
                   </tbody>
                 </table>
               </div>
+
+              {selectedGroup.activeCredit && (
+                <CalendarioPagos creditoId={selectedGroup.activeCredit.id} />
+              )}
             </div>
           ) : (
             <div className="solid-card flex items-center justify-center text-muted" style={{ minHeight: '400px' }}>

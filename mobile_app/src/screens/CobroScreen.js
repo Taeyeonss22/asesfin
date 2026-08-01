@@ -11,9 +11,10 @@ import { decode } from 'base64-arraybuffer';
 import { Camera, MapPin, MapPinOff, Save, Calculator } from 'lucide-react-native';
 import * as Network from 'expo-network';
 import { useNavigation } from '@react-navigation/native';
+import { Picker } from '@react-native-picker/picker';
 
 export default function CobroScreen({ route }) {
-  const { credito } = route.params;
+  const { credito, location: initialLocation, perfil } = route.params;
   const navigation = useNavigation();
 
   // Individual fields
@@ -23,12 +24,22 @@ export default function CobroScreen({ route }) {
   const [integrantes, setIntegrantes] = useState([]);
   const [pagosGrupal, setPagosGrupal] = useState({}); // { id: { abono: '', ahorro: '', mora: '' } }
   
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(initialLocation || null);
   const [photoUri, setPhotoUri] = useState(null);
   
   const [loading, setLoading] = useState(false);
+  const [numeroPago, setNumeroPago] = useState(1);
 
   useEffect(() => {
+    supabase.from('pagos').select('numero_pago').eq('credito_id', credito.credito_id).then(({data}) => {
+      if (data && data.length > 0) {
+        const maxPago = Math.max(...data.map(p => p.numero_pago || 0));
+        setNumeroPago(Math.min(maxPago + 1, credito.numero_periodos || 16));
+      } else {
+        setNumeroPago(1);
+      }
+    });
+    
     if (credito.tipo === 'GRUPAL') {
       fetchIntegrantes();
     }
@@ -152,7 +163,8 @@ export default function CobroScreen({ route }) {
           latitud: location ? location.latitude : null,
           longitud: location ? location.longitude : null,
           evidencia_url: evidencia_url,
-          registrado_por: userId
+          registrado_por: userId,
+          numero_pago: parseInt(numeroPago)
         };
 
         if (pAbono > 0) {
@@ -177,7 +189,8 @@ export default function CobroScreen({ route }) {
             latitud: location ? location.latitude : null,
             longitud: location ? location.longitude : null,
             evidencia_url: evidencia_url,
-            registrado_por: userId
+            registrado_por: userId,
+            numero_pago: parseInt(numeroPago)
           };
 
           if (pAbono > 0) inserts.push({ ...baseData, monto: pAbono, tipo: 'ABONO' });
@@ -195,30 +208,9 @@ export default function CobroScreen({ route }) {
       };
 
       if (isOnline) {
-        const pagosInserts = inserts.map(ins => {
-          const { latitud, longitud, evidencia_url, local_uri, ...rest } = ins;
-          return rest;
-        });
-
-        const { data, error } = await supabase.from('pagos').insert(pagosInserts).select();
-        if (error) throw error;
-        
-        const metadataInserts = data.map((insertedPago, index) => {
-           const originalInsert = inserts[index];
-           if (originalInsert.latitud || originalInsert.longitud || originalInsert.evidencia_url) {
-               return {
-                   pago_id: insertedPago.id,
-                   latitud: originalInsert.latitud,
-                   longitud: originalInsert.longitud,
-                   evidencia_url: originalInsert.evidencia_url
-               };
-           }
-           return null;
-        }).filter(Boolean);
-
-        if (metadataInserts.length > 0) {
-           const { error: metadataError } = await supabase.from('pagos_metadata').insert(metadataInserts);
-           if (metadataError) throw metadataError;
+        const { data, error } = await supabase.from('pagos').insert(inserts).select();
+        if (error) {
+           throw new Error(`Error guardando el pago y sus metadatos: ${error.message}`);
         }
         
         const { data: configData } = await supabase.from('configuracion_empresa').select('*').limit(1).single();
@@ -256,7 +248,23 @@ export default function CobroScreen({ route }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
-      <Text style={styles.title}>Registrar Pago {credito.tipo === 'GRUPAL' && 'Grupal'}</Text>
+      <Text style={styles.title}>Registrar Cobro</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>Periodo a Pagar (Semana)</Text>
+        <View style={{ backgroundColor: '#0f172a', borderRadius: 8, marginTop: 5, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }}>
+          <Picker
+            selectedValue={numeroPago}
+            onValueChange={(itemValue) => setNumeroPago(itemValue)}
+            style={{ color: '#fff' }}
+            dropdownIconColor="#fff"
+          >
+            {Array.from({ length: credito.numero_periodos || 16 }, (_, i) => i + 1).map(num => (
+              <Picker.Item key={num} label={`Semana ${num} de ${credito.numero_periodos || 16}`} value={num} />
+            ))}
+          </Picker>
+        </View>
+      </View>
       
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{credito.nombre_cliente || `Grupo: ${credito.credito_id.substring(0,8)}`}</Text>

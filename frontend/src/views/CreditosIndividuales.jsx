@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, RefreshCw, Plus, DollarSign, Printer, Search } from 'lucide-react';
+import { User, RefreshCw, Plus, DollarSign, Printer, Search, Calendar } from 'lucide-react';
 import CreditForm from '../components/CreditForm';
 import PaymentForm from '../components/PaymentForm';
+import CalendarioModal from '../components/CalendarioModal';
 
 export default function CreditosIndividuales({ session }) {
   const [credits, setCredits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreditForm, setShowCreditForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(null);
+  const [showCalendarioModal, setShowCalendarioModal] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchCredits = async () => {
@@ -114,6 +116,14 @@ export default function CreditosIndividuales({ session }) {
                           <Printer size={14} />
                         </button>
                         <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                          onClick={() => setShowCalendarioModal(item)}
+                          title="Ver Calendario y Pagos"
+                        >
+                          <Calendar size={14} />
+                        </button>
+                        <button 
                           className="btn btn-primary" 
                           style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
                           onClick={() => setShowPaymentForm(item)}
@@ -136,6 +146,9 @@ export default function CreditosIndividuales({ session }) {
       )}
       {showPaymentForm && (
         <PaymentForm credit={showPaymentForm} onClose={() => { setShowPaymentForm(null); fetchCredits(); }} session={session} />
+      )}
+      {showCalendarioModal && (
+        <CalendarioModal credito={showCalendarioModal} onClose={() => setShowCalendarioModal(null)} />
       )}
     </div>
   );

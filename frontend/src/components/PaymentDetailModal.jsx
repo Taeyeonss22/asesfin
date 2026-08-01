@@ -24,6 +24,11 @@ export default function PaymentDetailModal({ pago, onClose }) {
               ${parseFloat(pago.monto).toLocaleString()}
               <span className="text-sm font-normal text-muted ml-2">({pago.tipo_pago})</span>
             </div>
+            {pago.numero_pago && (
+              <div className="text-sm text-primary font-medium mt-1">
+                Semana {pago.numero_pago}
+              </div>
+            )}
           </div>
           <div className="glass-card" style={{ padding: '1rem' }}>
             <div className="flex items-center gap-2 text-muted text-xs uppercase font-bold tracking-wider mb-1">
