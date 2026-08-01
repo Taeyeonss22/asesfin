@@ -5,12 +5,6 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
-# Argumentos de construcción para que Vite incruste las variables
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
-
 RUN npm run build
 # Serve stage
 FROM nginx:alpine
