@@ -58,6 +58,7 @@ export default function Layout({ session, perfil, configEmpresa }) {
               <LogOut size={18} />
             </button>
           </div>
+          </div>
         </header>
 
         <main className="content-area">
