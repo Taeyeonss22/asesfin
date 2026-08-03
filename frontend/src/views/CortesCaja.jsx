@@ -209,7 +209,7 @@ export default function CortesCaja({ session }) {
                 {/* Left Column: Pagos List */}
               <div>
                 <h4 className="text-sm font-bold mb-3 uppercase text-muted">Transacciones ({cortePagos.length})</h4>
-                <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <div className="table-container">
                   <table>
                     <thead style={{ position: 'sticky', top: 0, background: '#1e293b', zIndex: 10 }}>
                       <tr>

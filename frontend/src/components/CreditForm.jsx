@@ -290,7 +290,7 @@ export default function CreditForm({ onClose, session }) {
                 {formData.grupo_id && (
                   <div className="mt-4">
                     <h4 className="text-muted text-sm uppercase tracking-wider mb-2">Montos por Integrante</h4>
-                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    <div>
                       {integrantes.map((int, i) => (
                         <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', mb: '1rem', border: '1px solid var(--border-subtle)' }} className="mb-4">
                           <div className="font-bold mb-2 text-primary">{int.nombre_completo}</div>

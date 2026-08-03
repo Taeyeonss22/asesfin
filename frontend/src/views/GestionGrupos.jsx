@@ -202,7 +202,7 @@ export default function GestionGrupos({ session }) {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '600px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
             {filteredGrupos.length === 0 ? (
               <div className="text-center text-muted p-4">No se encontraron grupos.</div>
             ) : (

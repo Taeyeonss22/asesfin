@@ -586,6 +586,7 @@ tr:hover td {
   padding: 1.5rem 2rem 2rem 2rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .modal-close {
