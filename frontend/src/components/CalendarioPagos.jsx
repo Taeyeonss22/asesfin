@@ -143,7 +143,7 @@ export default function CalendarioPagos({ creditoId }) {
         </div>
       </div>
       
-      <div className="table-container" style={{ border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.1)' }}>
+      <div className="table-container" style={{ border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.1)', maxHeight: '50vh', overflowY: 'auto' }}>
         <table>
           <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: '#1e293b' }}>
             <tr>
