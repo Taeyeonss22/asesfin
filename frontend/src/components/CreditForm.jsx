@@ -188,7 +188,7 @@ export default function CreditForm({ onClose, session }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: formData.tipo === 'GRUPAL' ? '700px' : '450px' }}>
+      <div className="modal-content glass-card" style={{ maxWidth: formData.tipo === 'GRUPAL' ? '700px' : '450px' }}>
         <div className="modal-header">
           <h3>Nuevo Crédito</h3>
           <button className="modal-close" onClick={onClose}>&times;</button>

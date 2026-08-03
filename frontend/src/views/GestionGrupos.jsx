@@ -308,7 +308,7 @@ export default function GestionGrupos({ session }) {
 
       {showCreateForm && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
               <h3>Crear Grupo Nuevo</h3>
               <button className="modal-close" onClick={() => setShowCreateForm(false)}>&times;</button>

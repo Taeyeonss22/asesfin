@@ -181,7 +181,7 @@ export default function PaymentForm({ credit, onClose, session }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content animate-fade-in" style={{ maxWidth: '900px' }}>
+      <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '900px' }}>
         <div className="modal-header">
 
           <h3 style={{ margin: 0 }}>Registrar Pago {credit.tipo === 'GRUPAL' && 'Grupal'}</h3>

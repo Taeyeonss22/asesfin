@@ -6,7 +6,7 @@ export default function PaymentDetailModal({ pago, onClose }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content animate-fade-in" style={{ maxWidth: '600px' }}>
+      <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '600px' }}>
         <div className="modal-header">
           <h3 style={{ margin: 0 }} className="flex items-center gap-2">
             <DollarSign className="text-primary" />

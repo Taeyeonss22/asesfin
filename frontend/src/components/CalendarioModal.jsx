@@ -7,7 +7,7 @@ export default function CalendarioModal({ credito, onClose }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content animate-fade-in" style={{ maxWidth: '800px' }}>
+      <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '800px' }}>
         <div className="modal-header">
           <h3 style={{ margin: 0 }}>
             Detalle del Crédito {credito.tipo === 'INDIVIDUAL' ? credito.nombre_cliente : credito.nombre}

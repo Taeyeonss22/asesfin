@@ -189,7 +189,7 @@ export default function CortesCaja({ session }) {
       {/* Modal Detalles del Corte */}
       {selectedCorte && (
         <div className="modal-overlay">
-          <div className="modal-content animate-fade-in" style={{ maxWidth: '800px' }}>
+          <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '800px' }}>
             <div className="modal-header">
               <div>
                 <h3 style={{ margin: 0 }}>Detalle de Corte de Caja</h3>
