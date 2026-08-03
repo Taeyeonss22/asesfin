@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Modal from '../components/Modal';
 import { supabase } from '../lib/supabase';
 import { FolderKey, RefreshCw, Eye, Search, Plus, Calculator } from 'lucide-react';
 import PaymentForm from '../components/PaymentForm';

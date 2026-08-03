@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Modal from './Modal';
 import { supabase } from '../lib/supabase';
 import { X, Calculator } from 'lucide-react';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';

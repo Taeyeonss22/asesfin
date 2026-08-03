@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { CreditCard, RefreshCw, Search, Plus, UserPlus } from 'lucide-react';
+import Modal from '../components/Modal';
 
 export default function DirectorioClientes() {
   const [clientes, setClientes] = useState([]);

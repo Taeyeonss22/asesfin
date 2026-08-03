@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Modal from '../components/Modal';
 import { supabase } from '../lib/supabase';
 import { exportToCSV } from '../lib/exportUtils';
 import PaymentDetailModal from '../components/PaymentDetailModal';
