@@ -52,7 +52,7 @@ export default function PrintContract({ configEmpresa }) {
       // Replace variables
       finalHtml = finalHtml
         .replace(/{{credito_id}}/g, credito.id.split('-')[0].toUpperCase())
-        .replace(/{{empresa_nombre}}/g, config?.nombre_empresa || 'Empresa')
+        .replace(/{{empresa_nombre}}/g, configEmpresa?.nombre_empresa || 'Empresa')
         .replace(/{{cliente_nombre}}/g, credito.nombre_cliente || 'N/A')
         .replace(/{{monto_otorgado}}/g, credito.monto_otorgado)
         .replace(/{{monto_otorgado_total}}/g, credito.monto_otorgado)
