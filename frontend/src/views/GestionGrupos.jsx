@@ -308,13 +308,14 @@ export default function GestionGrupos({ session }) {
 
       {showCreateForm && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+          <div className="modal-content" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
               <h3>Crear Grupo Nuevo</h3>
               <button className="modal-close" onClick={() => setShowCreateForm(false)}>&times;</button>
             </div>
             
-            <form onSubmit={handleCreateGroup} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+            <div className="modal-body">
+            <form onSubmit={handleCreateGroup}>
               <div className="form-group">
                 <label>Nombre del Grupo</label>
                 <input 
@@ -363,6 +364,7 @@ export default function GestionGrupos({ session }) {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

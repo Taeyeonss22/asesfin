@@ -182,10 +182,13 @@ export default function PaymentForm({ credit, onClose, session }) {
   return (
     <div className="modal-overlay">
       <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '900px' }}>
-        <div className="flex justify-between items-center mb-4">
+        <div className="modal-header">
+
           <h3 style={{ margin: 0 }}>Registrar Pago {credit.tipo === 'GRUPAL' && 'Grupal'}</h3>
-          <button className="btn btn-outline" onClick={onClose} style={{ padding: '0.25rem' }}><X size={20}/></button>
+          <button className="modal-close" onClick={onClose} style={{ padding: '0.25rem' }}><X size={20}/></button>
         </div>
+
+        <div className="modal-body">
 
         {error && (
           <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
@@ -368,6 +371,7 @@ export default function PaymentForm({ credit, onClose, session }) {
             </div>
           </form>
         )}
+        </div>
       </div>
     </div>
   );

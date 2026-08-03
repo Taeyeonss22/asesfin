@@ -8,16 +8,18 @@ export default function CalendarioModal({ credito, onClose }) {
   return (
     <div className="modal-overlay">
       <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '800px' }}>
-        <div className="flex justify-between items-center mb-4">
+        <div className="modal-header">
           <h3 style={{ margin: 0 }}>
             Detalle del Crédito {credito.tipo === 'INDIVIDUAL' ? credito.nombre_cliente : credito.nombre}
           </h3>
-          <button className="btn btn-outline" onClick={onClose} style={{ padding: '0.25rem' }}>
+          <button className="modal-close" onClick={onClose} style={{ padding: '0.25rem' }}>
             <X size={20} />
           </button>
         </div>
         
-        <CalendarioPagos creditoId={credito.credito_id || credito.id} />
+        <div className="modal-body">
+          <CalendarioPagos creditoId={credito.credito_id || credito.id} />
+        </div>
         
       </div>
     </div>

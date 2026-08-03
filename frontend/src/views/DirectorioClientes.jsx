@@ -186,51 +186,56 @@ export default function DirectorioClientes() {
               <button className="modal-close" onClick={() => setShowForm(false)}>&times;</button>
             </div>
             
-            {formError && (
-              <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                {formError}
-              </div>
-            )}
+            <div className="modal-body">
+              {formError && (
+                <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                  {formError}
+                </div>
+              )}
 
-            <form onSubmit={handleCreateCliente}>
-              <div className="form-group">
-                <label>Nombre Completo</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  value={formData.nombre_completo}
-                  onChange={(e) => setFormData({...formData, nombre_completo: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Teléfono (Opcional)</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  value={formData.telefono}
-                  onChange={(e) => setFormData({...formData, telefono: e.target.value})}
-                />
-              </div>
-              <div className="form-group">
-                <label>Dirección (Opcional)</label>
-                <textarea 
-                  className="form-control" 
-                  rows="2"
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({...formData, direccion: e.target.value})}
-                ></textarea>
-              </div>
-              
-              <div className="flex justify-between mt-6">
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={formLoading}>
-                  {formLoading ? 'Guardando...' : 'Guardar Cliente'}
-                </button>
-              </div>
-            </form>
+              <form onSubmit={handleCreateCliente}>
+                <div className="form-group">
+                  <label>Nombre Completo</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={formData.nombre_completo}
+                    onChange={(e) => setFormData({...formData, nombre_completo: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Teléfono</label>
+                  <input 
+                    type="tel" 
+                    className="form-control" 
+                    value={formData.telefono}
+                    onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Dirección</label>
+                  <textarea 
+                    className="form-control" 
+                    rows="3"
+                    value={formData.direccion}
+                    onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+                  ></textarea>
+                </div>
+                
+                <div className="flex justify-between mt-6">
+                  <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={formLoading}>
+                    {formLoading ? 'Guardando...' : 'Guardar Cliente'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
