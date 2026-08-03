@@ -307,14 +307,7 @@ export default function GestionGrupos({ session }) {
       </div>
 
       {showCreateForm && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-card" style={{ maxWidth: '600px' }}>
-            <div className="modal-header">
-              <h3>Crear Grupo Nuevo</h3>
-              <button className="modal-close" onClick={() => setShowCreateForm(false)}>&times;</button>
-            </div>
-            
-            <div className="modal-body">
+        <Modal title="Crear Grupo Nuevo" onClose={() => setShowCreateForm(false)} maxWidth="600px">
             <form onSubmit={handleCreateGroup}>
               <div className="form-group">
                 <label>Nombre del Grupo</label>
@@ -346,16 +339,19 @@ export default function GestionGrupos({ session }) {
                       <input 
                         type="checkbox" 
                         checked={newGroup.integrantes.includes(c.id)}
-                        onChange={() => toggleIntegrante(c.id)}
-                        className="cursor-pointer w-4 h-4"
+                        onChange={() => {}} 
+                        style={{ cursor: 'pointer' }}
                       />
-                      <span className="font-medium">{c.nombre_completo}</span>
+                      <div>
+                        <div className="font-medium text-main">{c.nombre_completo}</div>
+                        {c.telefono && <div className="text-xs text-muted">{c.telefono}</div>}
+                      </div>
                     </div>
                   ))
                 )}
               </div>
               
-              <div className="flex justify-between mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+              <div className="flex justify-between mt-6">
                 <button type="button" className="btn btn-outline" onClick={() => setShowCreateForm(false)}>
                   Cancelar
                 </button>
@@ -364,9 +360,7 @@ export default function GestionGrupos({ session }) {
                 </button>
               </div>
             </form>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {showPaymentModal && (

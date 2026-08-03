@@ -1,33 +1,29 @@
 import React from 'react';
-import { X, MapPin, Camera, User, Clock, DollarSign } from 'lucide-react';
+import { MapPin, Camera, User, Clock, DollarSign } from 'lucide-react';
+import Modal from './Modal';
 
 export default function PaymentDetailModal({ pago, onClose }) {
   if (!pago) return null;
 
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '600px' }}>
-        <div className="modal-header">
-          <h3 style={{ margin: 0 }} className="flex items-center gap-2">
-            <DollarSign className="text-primary" />
-            Detalle de Cobro
-          </h3>
-          <button className="modal-close" onClick={onClose} style={{ padding: '0.25rem' }}>
-            <X size={20}/>
-          </button>
-        </div>
+  const title = (
+    <div className="flex items-center gap-2">
+      <DollarSign className="text-primary" />
+      Detalle de Cobro
+    </div>
+  );
 
-        <div className="modal-body">
-          <div className="mb-6 grid grid-cols-2 gap-4">
-            <div className="glass-card" style={{ padding: '1rem' }}>
-              <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Monto Cobrado</div>
-              <div className="text-xl font-bold" style={{ color: pago.tipo_pago === 'MORA' ? 'var(--danger)' : 'var(--success)' }}>
-                ${parseFloat(pago.monto).toLocaleString()}
-                <span className="text-sm font-normal text-muted ml-2">({pago.tipo_pago})</span>
-              </div>
-              {pago.numero_pago && (
-                <div className="text-sm text-primary font-medium mt-1">
-                  Semana {pago.numero_pago}
+  return (
+    <Modal title={title} onClose={onClose} maxWidth="600px">
+      <div className="mb-6 grid grid-cols-2 gap-4">
+        <div className="glass-card" style={{ padding: '1rem' }}>
+          <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Monto Cobrado</div>
+          <div className="text-xl font-bold" style={{ color: pago.tipo_pago === 'MORA' ? 'var(--danger)' : 'var(--success)' }}>
+            ${parseFloat(pago.monto).toLocaleString()}
+            <span className="text-sm font-normal text-muted ml-2">({pago.tipo_pago})</span>
+          </div>
+          {pago.numero_pago && (
+            <div className="text-sm text-primary font-medium mt-1">
+              Semana {pago.numero_pago}
                 </div>
               )}
             </div>
@@ -105,9 +101,7 @@ export default function PaymentDetailModal({ pago, onClose }) {
                 </div>
               )}
             </div>
-          </div>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

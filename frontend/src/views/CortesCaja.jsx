@@ -188,26 +188,23 @@ export default function CortesCaja({ session }) {
 
       {/* Modal Detalles del Corte */}
       {selectedCorte && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '800px' }}>
-            <div className="modal-header">
-              <div>
-                <h3 style={{ margin: 0 }}>Detalle de Corte de Caja</h3>
-                <div className="text-sm text-muted mt-1 flex items-center gap-2">
-                  <span>Cobrador: {selectedCorte.cobrador?.nombre_completo}</span>
-                  <span>•</span>
-                  <span>Fecha: {format(new Date(selectedCorte.fecha), 'dd/MM/yyyy HH:mm')}</span>
-                </div>
+        <Modal 
+          title={
+            <div>
+              <h3 style={{ margin: 0 }}>Detalle de Corte de Caja</h3>
+              <div className="text-sm text-muted mt-1 flex items-center gap-2">
+                <span>Cobrador: {selectedCorte.cobrador?.nombre_completo}</span>
+                <span>•</span>
+                <span>Fecha: {format(new Date(selectedCorte.fecha), 'dd/MM/yyyy HH:mm')}</span>
               </div>
-              <button className="modal-close" onClick={() => setSelectedCorte(null)} style={{ padding: '0.25rem' }}>
-                <X size={20} />
-              </button>
             </div>
-
-            <div className="modal-body">
-              <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-                {/* Left Column: Pagos List */}
-              <div>
+          }
+          onClose={() => setSelectedCorte(null)}
+          maxWidth="800px"
+        >
+          <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+            {/* Left Column: Pagos List */}
+          <div>
                 <h4 className="text-sm font-bold mb-3 uppercase text-muted">Transacciones ({cortePagos.length})</h4>
                 <div className="table-container" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
                   <table>
@@ -303,9 +300,7 @@ export default function CortesCaja({ session }) {
                 )}
               </div>
             </div>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {selectedPagoDetail && (
