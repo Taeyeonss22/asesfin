@@ -180,7 +180,7 @@ export default function DirectorioClientes() {
 
       {showForm && (
         <div className="modal-overlay">
-          <div className="modal-content glass-card" style={{ maxWidth: '450px' }}>
+          <div className="modal-content glass-card" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
               <h3>Registrar Nuevo Cliente</h3>
               <button className="modal-close" onClick={() => setShowForm(false)}>&times;</button>

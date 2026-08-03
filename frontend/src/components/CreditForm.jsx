@@ -188,7 +188,7 @@ export default function CreditForm({ onClose, session }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content glass-card" style={{ maxWidth: formData.tipo === 'GRUPAL' ? '700px' : '450px' }}>
+      <div className="modal-content glass-card animate-fade-in" style={{ maxWidth: '800px' }}>
         <div className="modal-header">
           <h3>Nuevo Crédito</h3>
           <button className="modal-close" onClick={onClose}>&times;</button>
@@ -245,7 +245,7 @@ export default function CreditForm({ onClose, session }) {
             </div>
 
             {formData.tipo === 'INDIVIDUAL' && (
-              <>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="form-group">
                   <label>Seleccionar Cliente (Libre)</label>
                   <Select
@@ -259,7 +259,7 @@ export default function CreditForm({ onClose, session }) {
                       control: (base) => ({ ...base, background: 'rgba(255, 255, 255, 0.05)', borderColor: 'var(--border-subtle)', color: 'var(--text-main)' }),
                       singleValue: (base) => ({ ...base, color: 'var(--text-main)' }),
                       input: (base) => ({ ...base, color: 'var(--text-main)' }),
-                      menu: (base) => ({ ...base, background: 'var(--card-bg)', border: '1px solid var(--border-subtle)' }),
+                      menu: (base) => ({ ...base, background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', zIndex: 100 }),
                       option: (base, { isFocused }) => ({ ...base, background: isFocused ? 'rgba(59, 130, 246, 0.2)' : 'transparent', color: 'var(--text-main)', cursor: 'pointer' })
                     }}
                     required
@@ -271,7 +271,7 @@ export default function CreditForm({ onClose, session }) {
                   <label>Monto Otorgado ($)</label>
                   <input type="number" name="monto_otorgado" className="form-control" value={formData.monto_otorgado} onChange={handleChange} min="1" step="0.01" required />
                 </div>
-              </>
+              </div>
             )}
 
             {formData.tipo === 'GRUPAL' && (
