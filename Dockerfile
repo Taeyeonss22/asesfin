@@ -25,6 +25,10 @@ RUN echo 'server { \
         index index.html index.htm; \
         try_files $uri $uri/ /index.html; \
     } \
+    location = /index.html { \
+        root /usr/share/nginx/html; \
+        add_header Cache-Control "no-store, no-cache, must-revalidate"; \
+    } \
 }' > /etc/nginx/conf.d/default.conf
 
 # Copiar los estáticos compilados desde la etapa de build
