@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { FileText, Save } from 'lucide-react';
+import { FileText, Save, RefreshCw } from 'lucide-react';
+import { htmlIndividual, htmlIndividualAval, htmlGrupal } from '../lib/templates';
 
 export default function PlantillasContrato() {
   const [plantillas, setPlantillas] = useState([]);
@@ -11,7 +12,21 @@ export default function PlantillasContrato() {
   const fetchPlantillas = async () => {
     setLoading(true);
     const { data } = await supabase.from('plantillas_contratos').select('*');
-    if (data) setPlantillas(data);
+    
+    if (data && data.length > 0) {
+      setPlantillas(data);
+    } else {
+      // Seed if empty
+      const defaultTemplates = [
+        { tipo: 'INDIVIDUAL', contenido: htmlIndividual },
+        { tipo: 'INDIVIDUAL_AVAL', contenido: htmlIndividualAval },
+        { tipo: 'GRUPAL', contenido: htmlGrupal }
+      ];
+      await supabase.from('plantillas_contratos').insert(defaultTemplates);
+      const { data: newData } = await supabase.from('plantillas_contratos').select('*');
+      if (newData) setPlantillas(newData);
+    }
+    
     setLoading(false);
   };
 
@@ -64,7 +79,7 @@ export default function PlantillasContrato() {
         <div className="mb-6 p-4 rounded-lg bg-black/20 border border-white/5">
           <h4 className="text-sm uppercase tracking-wider text-muted mb-2">Variables Disponibles</h4>
           <code className="text-xs text-primary" style={{ display: 'block', lineHeight: 1.8 }}>
-            {'{{empresa_nombre}}, {{cliente_nombre}}, {{monto_otorgado}}, {{total_a_pagar}}, {{periodicidad}}, {{fecha_inicio}}, {{numero_periodos}}, {{credito_id}}, {{tabla_integrantes}}'}
+            {'{{empresa_nombre}}, {{cliente_nombre}}, {{folio}}, {{monto_otorgado}}, {{interes_generado}}, {{monto_total_a_pagar}}, {{plazo}}, {{cuota_periodo}}, {{fecha_primer_pago}}, {{tasa_interes}}, {{domicilio_acreditado}}, {{fecha_vencimiento}}, {{fecha_firma}}, {{nombre_aval}}, {{domicilio_aval}}, {{garantia_liquida}}, {{tabla_integrantes}}'}
           </code>
         </div>
         
