@@ -44,7 +44,18 @@ export default function PlantillasContrato() {
     
     let errorOcurred = false;
     for (const p of plantillas) {
-      const { error } = await supabase.from('plantillas_contratos').update({ contenido: p.contenido }).eq('id', p.id);
+      // Check if it exists first
+      const { data: existing } = await supabase.from('plantillas_contratos').select('id').eq('tipo', p.tipo).single();
+      
+      let error;
+      if (existing) {
+        const res = await supabase.from('plantillas_contratos').update({ contenido: p.contenido }).eq('tipo', p.tipo);
+        error = res.error;
+      } else {
+        const res = await supabase.from('plantillas_contratos').insert({ tipo: p.tipo, contenido: p.contenido });
+        error = res.error;
+      }
+
       if (error) {
         errorOcurred = true;
         setMessage('Error al guardar: ' + error.message);
@@ -57,6 +68,31 @@ export default function PlantillasContrato() {
     }
 
     setSaving(false);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleRestoreDefaults = async () => {
+    if (!window.confirm('¿Estás seguro de restaurar las plantillas por defecto? Esto sobreescribirá los diseños actuales.')) return;
+    
+    setLoading(true);
+    const defaultTemplates = [
+      { tipo: 'INDIVIDUAL', contenido: htmlIndividual },
+      { tipo: 'INDIVIDUAL_AVAL', contenido: htmlIndividualAval },
+      { tipo: 'GRUPAL', contenido: htmlGrupal }
+    ];
+    
+    for (const t of defaultTemplates) {
+      // Upsert by tipo
+      const { data: existing } = await supabase.from('plantillas_contratos').select('id').eq('tipo', t.tipo).single();
+      if (existing) {
+        await supabase.from('plantillas_contratos').update({ contenido: t.contenido }).eq('tipo', t.tipo);
+      } else {
+        await supabase.from('plantillas_contratos').insert(t);
+      }
+    }
+    
+    await fetchPlantillas();
+    setMessage('Plantillas restauradas a su valor por defecto.');
     setTimeout(() => setMessage(''), 3000);
   };
 
@@ -99,6 +135,9 @@ export default function PlantillasContrato() {
         <div className="flex items-center gap-4 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Guardando...' : <><Save size={16} /> Guardar Plantillas</>}
+          </button>
+          <button className="btn btn-outline" onClick={handleRestoreDefaults} disabled={saving}>
+            <RefreshCw size={16} /> Restaurar por Defecto
           </button>
           {message && (
             <span className={message.includes('Error') ? 'text-danger' : 'text-success'}>
