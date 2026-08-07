@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
+import { enrichCreditData, calcularFechaProgramada } from '../lib/penalties';
 
 export default function CalendarioPagos({ creditoId }) {
   const [loading, setLoading] = useState(true);
@@ -9,6 +10,8 @@ export default function CalendarioPagos({ creditoId }) {
   const [pagos, setPagos] = useState([]);
   const [calendario, setCalendario] = useState([]);
   const [faltas, setFaltas] = useState(0);
+  const [costoFaltas, setCostoFaltas] = useState(0);
+  const [moratorio, setMoratorio] = useState(0);
 
   useEffect(() => {
     if (!creditoId) return;
@@ -73,20 +76,7 @@ export default function CalendarioPagos({ creditoId }) {
     });
     
     for (let i = 1; i <= numPeriodos; i++) {
-      let fechaProgramada = new Date(fechaInicio);
-      
-      if (credito.periodicidad === 'SEMANAL') {
-        fechaProgramada = addWeeks(fechaInicio, i);
-      } else if (credito.periodicidad === 'QUINCENAL') {
-        fechaProgramada = addDays(fechaInicio, i * 15);
-      } else if (credito.periodicidad === 'MENSUAL') {
-        fechaProgramada = addMonths(fechaInicio, i);
-      } else if (credito.periodicidad === 'DIARIA') {
-        fechaProgramada = addDays(fechaInicio, i);
-      } else {
-        // Fallback semanal
-        fechaProgramada = addWeeks(fechaInicio, i);
-      }
+      let fechaProgramada = calcularFechaProgramada(fechaInicio, i, credito.periodicidad);
       
       const pagosDelPeriodo = pagosAgrupados[i] || [];
       const totalAbonado = pagosDelPeriodo.reduce((sum, p) => sum + Number(p.monto), 0);
@@ -112,7 +102,14 @@ export default function CalendarioPagos({ creditoId }) {
     }
     
     setCalendario(periodos);
-    setFaltas(Math.floor(incompletos / 3));
+    
+    // Apply enrich to calculate penalties correctly
+    const enriched = enrichCreditData(credito, pagos, 0); // We just need the penalty math here
+    if (enriched) {
+      setFaltas(enriched.faltas_computadas);
+      setCostoFaltas(enriched.costo_faltas);
+      setMoratorio(enriched.moratorio);
+    }
     
   }, [credito, pagos]);
 
@@ -131,9 +128,14 @@ export default function CalendarioPagos({ creditoId }) {
           <Calendar size={14} /> Calendario de Pagos
         </h4>
         <div className="flex gap-3">
-          {faltas > 0 ? (
+          {moratorio > 0 && (
             <span className="badge badge-danger flex items-center gap-1">
-              <AlertTriangle size={12} /> {faltas} Falta(s) Activa(s)
+              <AlertTriangle size={12} /> Moratorio Vencido: ${moratorio.toLocaleString('es-MX', {minimumFractionDigits: 2})}
+            </span>
+          )}
+          {faltas > 0 ? (
+            <span className="badge badge-warning flex items-center gap-1" style={{ background: 'var(--warning-light)', color: 'var(--warning)' }}>
+              <AlertTriangle size={12} /> {faltas} Falta(s): ${costoFaltas.toLocaleString('es-MX', {minimumFractionDigits: 2})}
             </span>
           ) : (
             <span className="badge badge-success flex items-center gap-1">

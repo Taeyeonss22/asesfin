@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { DollarSign, TrendingUp, CreditCard, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { enrichCreditData } from '../lib/penalties';
 
 export default function DashboardMetrics() {
   const [metrics, setMetrics] = useState({ 
@@ -13,27 +14,49 @@ export default function DashboardMetrics() {
   const [loading, setLoading] = useState(true);
 
   const fetchMetrics = async () => {
-    // 1. Fetch adeudo from the view
-    const { data: vData } = await supabase.from('vista_metricas_dashboard').select('*');
+    // 1. Fetch cartera activa (sum of monto_otorgado of active credits)
+    const { data: cData } = await supabase.from('vista_saldos_creditos').select('*').in('estado', ['ACTIVO', 'MORA']);
+    
+    let carteraColocada = 0;
     let totalCreditos = 0;
     let totalAdeudo = 0;
-    
-    if (vData) {
-      totalCreditos = vData.reduce((acc, curr) => acc + parseInt(curr.creditos_activos), 0);
-      totalAdeudo = vData.reduce((acc, curr) => acc + parseFloat(curr.adeudo_total_cartera), 0);
+
+    if (cData && cData.length > 0) {
+      const creditIds = cData.map(c => c.credito_id);
+      
+      // Fetch all payments for these credits to calculate penalties correctly
+      const { data: allPagos } = await supabase
+        .from('pagos')
+        .select('*')
+        .in('credito_id', creditIds);
+
+      // Group payments
+      const pagosByCredit = {};
+      if (allPagos) {
+        allPagos.forEach(p => {
+          if (!pagosByCredit[p.credito_id]) pagosByCredit[p.credito_id] = [];
+          pagosByCredit[p.credito_id].push(p);
+        });
+      }
+
+      cData.forEach(credit => {
+        carteraColocada += parseFloat(credit.monto_otorgado) || 0;
+        totalCreditos++;
+
+        const enriched = enrichCreditData(credit, pagosByCredit[credit.credito_id] || [], parseFloat(credit.saldo_pendiente) || 0);
+        if (enriched) {
+          totalAdeudo += enriched.adeudo_total_real;
+        }
+      });
     }
 
-    // 2. Fetch cartera activa (sum of monto_otorgado of active credits)
-    const { data: cData } = await supabase.from('creditos').select('monto_otorgado').eq('estado', 'ACTIVO');
-    const carteraColocada = cData ? cData.reduce((acc, curr) => acc + parseFloat(curr.monto_otorgado), 0) : 0;
-
-    // 3. Fetch cobrado hoy
+    // 2. Fetch cobrado hoy
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const { data: pData } = await supabase
       .from('pagos')
       .select('monto')
-      .eq('tipo', 'ABONO')
+      .in('tipo', ['ABONO', 'MORA']) // Incluir mora en cobrado
       .gte('fecha_pago', startOfDay.toISOString());
     
     const cobradoHoy = pData ? pData.reduce((acc, curr) => acc + parseFloat(curr.monto), 0) : 0;

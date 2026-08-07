@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import CreditForm from './CreditForm';
 import DashboardMetrics from './DashboardMetrics';
 import LiveFeed from './LiveFeed';
+import VencimientosWidget from './VencimientosWidget';
 
 export default function Dashboard({ session, perfil }) {
   const [showCreditForm, setShowCreditForm] = useState(false);
@@ -47,9 +48,14 @@ export default function Dashboard({ session, perfil }) {
       {/* Metrics Row */}
       <DashboardMetrics key={metricsKey} />
 
-      {/* Live Feed Row */}
-      <div className="mt-6">
-        <LiveFeed key={`feed-${metricsKey}`} perfil={perfil} />
+      {/* Feed & Vencimientos Row */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <LiveFeed key={`feed-${metricsKey}`} perfil={perfil} />
+        </div>
+        <div>
+          <VencimientosWidget key={`venc-${metricsKey}`} />
+        </div>
       </div>
 
       {showCreditForm && (

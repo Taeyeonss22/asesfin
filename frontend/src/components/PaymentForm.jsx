@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from './Modal';
 import { supabase } from '../lib/supabase';
-import { X, Calculator } from 'lucide-react';
+import { X, Calculator, AlertTriangle } from 'lucide-react';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
+import { enrichCreditData } from '../lib/penalties';
 
 export default function PaymentForm({ credit, onClose, session }) {
   const [loading, setLoading] = useState(false);
@@ -18,16 +19,28 @@ export default function PaymentForm({ credit, onClose, session }) {
   const [successPagoId, setSuccessPagoId] = useState(null);
   const [numeroPago, setNumeroPago] = useState(1);
 
+  const [pagosHistory, setPagosHistory] = useState([]);
+  const [enrichedCredit, setEnrichedCredit] = useState(null);
+
   useEffect(() => {
-    supabase.from('pagos').select('numero_pago').eq('credito_id', credit.credito_id).then(({data}) => {
+    supabase.from('pagos').select('*').eq('credito_id', credit.credito_id).then(({data}) => {
       if (data && data.length > 0) {
+        setPagosHistory(data);
         const maxPago = Math.max(...data.map(p => p.numero_pago || 0));
         setNumeroPago(Math.min(maxPago + 1, credit.numero_periodos || 16));
       } else {
         setNumeroPago(1);
+        setPagosHistory([]);
       }
     });
   }, [credit.credito_id, credit.numero_periodos]);
+
+  useEffect(() => {
+    if (credit.tipo === 'INDIVIDUAL') {
+      const enriched = enrichCreditData(credit, pagosHistory, parseFloat(credit.saldo_pendiente) || 0);
+      setEnrichedCredit(enriched);
+    }
+  }, [credit, pagosHistory]);
 
   useEffect(() => {
     if (credit.tipo === 'GRUPAL') {
@@ -207,6 +220,43 @@ export default function PaymentForm({ credit, onClose, session }) {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
+            <div className="flex gap-4 mb-6">
+              <div className="metric-card flex-1">
+                <div className="metric-title text-muted text-xs mb-1">ADEUDO ORIGINAL</div>
+                <div className="text-xl font-bold">
+                  ${parseFloat(credit.saldo_pendiente || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
+                </div>
+              </div>
+              
+              {(enrichedCredit?.costo_faltas > 0 || enrichedCredit?.moratorio > 0) && (
+                <div className="metric-card flex-1" style={{ borderColor: 'var(--warning)', background: 'var(--warning-light)' }}>
+                  <div className="metric-title text-warning text-xs mb-1 flex items-center gap-1">
+                    <AlertTriangle size={12} /> PENALIZACIONES
+                  </div>
+                  <div className="text-sm font-bold text-warning">
+                    Faltas ({enrichedCredit.faltas_computadas}): ${enrichedCredit.costo_faltas.toLocaleString('es-MX', {minimumFractionDigits:2})}
+                  </div>
+                  {enrichedCredit.moratorio > 0 && (
+                    <div className="text-sm font-bold text-danger">
+                      Moratorio: ${enrichedCredit.moratorio.toLocaleString('es-MX', {minimumFractionDigits:2})}
+                    </div>
+                  )}
+                  {enrichedCredit.total_mora_pagada > 0 && (
+                    <div className="text-xs mt-1 text-success">
+                      - Pagado: ${enrichedCredit.total_mora_pagada.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="metric-card flex-1" style={{ borderColor: 'var(--danger)', background: 'var(--danger-light)' }}>
+                <div className="metric-title text-danger text-xs mb-1">ADEUDO TOTAL REAL</div>
+                <div className="text-xl font-bold text-danger">
+                  ${(enrichedCredit?.adeudo_total_real || credit.saldo_pendiente || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
+                </div>
+              </div>
+            </div>
+
             <div className="mb-4 form-group">
               <label>Periodo a Pagar</label>
               <select 
