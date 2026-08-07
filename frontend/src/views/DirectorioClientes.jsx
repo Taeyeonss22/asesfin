@@ -182,7 +182,7 @@ export default function DirectorioClientes() {
       {showForm && (
         <Modal title="Registrar Nuevo Cliente" onClose={() => setShowForm(false)} maxWidth="600px">
           {formError && (
-            <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
               {formError}
             </div>
           )}

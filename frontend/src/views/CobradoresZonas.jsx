@@ -127,7 +127,7 @@ export default function CobradoresZonas({ session }) {
                 <tr key={u.id}>
                   <td>
                     <div className="flex items-center gap-2">
-                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-glass-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Users size={16} className="text-muted" />
                       </div>
                       <div>
@@ -141,7 +141,7 @@ export default function CobradoresZonas({ session }) {
                       className="form-control" 
                       value={u.rol} 
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                      style={{ padding: '0.4rem', width: 'auto', background: 'rgba(0,0,0,0.2)' }}
+                      style={{ padding: '0.4rem', width: 'auto', background: 'var(--bg-glass)' }}
                     >
                       <option value="ADMIN">Administrador</option>
                       <option value="OFICINA">Oficina / Call Center</option>
@@ -175,7 +175,7 @@ export default function CobradoresZonas({ session }) {
 
       {/* Modal Nuevo Usuario */}
       {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg-glass-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="solid-card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
             <div className="flex justify-between items-center mb-6">
               <h3 style={{ margin: 0 }}>Crear Nuevo Usuario</h3>

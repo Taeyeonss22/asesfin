@@ -9,9 +9,17 @@
   --bg-card: #1e293b;
   --bg-card-hover: #26334a;
   
+  /* Translucent Backgrounds */
+  --bg-glass: rgba(15, 23, 42, 0.5);
+  --bg-glass-strong: rgba(15, 23, 42, 0.85);
+  --bg-glass-light: rgba(255, 255, 255, 0.05);
+  --bg-input: rgba(15, 23, 42, 0.5);
+  --bg-table-header: #1e293b;
+  
   /* Bordes */
   --border-subtle: #334155;
   --border-light: rgba(255, 255, 255, 0.1);
+  --border-dashed: rgba(255, 255, 255, 0.2);
 
   /* Colores Semánticos */
   --primary: #10b981; /* Verde Teal / Accent */
@@ -25,11 +33,53 @@
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
+  --text-inverse: #0f172a;
 
   /* Sombras */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+}
+
+html.theme-light {
+  /* Fondo Principal */
+  --bg-base: #f8fafc;
+  --bg-sidebar: #ffffff;
+  
+  /* Tarjetas y Contenedores */
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  
+  /* Translucent Backgrounds */
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  --bg-glass-strong: rgba(255, 255, 255, 0.95);
+  --bg-glass-light: rgba(0, 0, 0, 0.03);
+  --bg-input: #ffffff;
+  --bg-table-header: #f1f5f9;
+  
+  /* Bordes */
+  --border-subtle: #e2e8f0;
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-dashed: rgba(0, 0, 0, 0.15);
+
+  /* Colores Semánticos */
+  --primary: #059669;
+  --primary-hover: #047857;
+  --success: #059669;
+  --info: #2563eb;
+  --warning: #d97706; /* Darker for better contrast on white */
+  --danger: #dc2626;
+
+  /* Texto */
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+  --text-inverse: #ffffff;
+
+  /* Sombras (slightly stronger in light mode) */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -151,7 +201,7 @@ h4 { font-size: 1.125rem; margin-bottom: 0.75rem; }
 }
 
 .nav-item:hover {
-  background: rgba(255,255,255,0.03);
+  background: var(--bg-glass-light);
   color: var(--text-main);
 }
 
@@ -184,7 +234,7 @@ h4 { font-size: 1.125rem; margin-bottom: 0.75rem; }
   justify-content: flex-end;
   align-items: center;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(15, 23, 42, 0.95);
+  background: var(--bg-glass-strong);
   gap: 1.5rem;
 }
 
@@ -281,7 +331,7 @@ h4 { font-size: 1.125rem; margin-bottom: 0.75rem; }
   align-items: center;
   justify-content: space-between;
   padding: 1rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--border-light);
 }
 .feed-item:last-child {
   border-bottom: none;
@@ -349,7 +399,7 @@ h4 { font-size: 1.125rem; margin-bottom: 0.75rem; }
 
 .btn-primary {
   background: var(--primary);
-  color: #000; /* Dark text for contrast against teal */
+  color: var(--text-inverse); /* Dark text for contrast against teal */
 }
 
 .btn-primary:hover {
@@ -363,7 +413,7 @@ h4 { font-size: 1.125rem; margin-bottom: 0.75rem; }
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-glass-light);
   border-color: var(--text-muted);
 }
 
@@ -372,7 +422,7 @@ h4 { font-size: 1.125rem; margin-bottom: 0.75rem; }
   color: var(--text-muted);
 }
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-glass-light);
   color: var(--text-main);
 }
 
@@ -392,7 +442,7 @@ h4 { font-size: 1.125rem; margin-bottom: 0.75rem; }
 .form-control {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--bg-glass);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-main);
@@ -427,7 +477,7 @@ th, td {
 }
 
 th {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-glass);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -440,7 +490,7 @@ tr:last-child td {
 }
 
 tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-glass-light);
 }
 
 /* Badges */
@@ -527,7 +577,7 @@ tr:hover td {
 }
 
 .loading-spinner {
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: 3px solid var(--border-light);
   border-radius: 50%;
   border-top: 3px solid var(--primary);
   width: 24px;
@@ -547,7 +597,7 @@ tr:hover td {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--bg-glass-strong);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: flex-start;

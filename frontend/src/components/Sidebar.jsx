@@ -54,7 +54,7 @@ export default function Sidebar({ configEmpresa }) {
               style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '4px' }}
             />
           ) : (
-            <div style={{ width: '32px', height: '32px', background: 'var(--primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '18px', fontWeight: 'bold'}}>
+            <div style={{ width: '32px', height: '32px', background: 'var(--primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-inverse)', fontSize: '18px', fontWeight: 'bold'}}>
               {configEmpresa?.nombre_empresa ? configEmpresa.nombre_empresa.charAt(0).toUpperCase() : 'M'}
             </div>
           )}

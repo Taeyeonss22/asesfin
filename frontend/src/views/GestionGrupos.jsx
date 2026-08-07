@@ -326,7 +326,7 @@ export default function GestionGrupos({ session }) {
                 Selecciona los Integrantes ({newGroup.integrantes.length} seleccionados)
               </label>
               
-              <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '1rem', background: 'rgba(0,0,0,0.1)' }}>
+              <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '1rem', background: 'var(--bg-glass-light)' }}>
                 {clientesLibres.length === 0 ? (
                   <div className="text-muted text-center py-4">No hay clientes libres sin crédito activo.</div>
                 ) : (

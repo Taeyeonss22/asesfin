@@ -190,7 +190,7 @@ export default function CreditForm({ onClose, session }) {
   return (
     <Modal title="Nuevo Crédito" onClose={onClose} maxWidth="800px">
       {error && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
           {error}
         </div>
       )}
@@ -250,7 +250,7 @@ export default function CreditForm({ onClose, session }) {
                 isClearable
                 isSearchable
                 styles={{
-                  control: (base) => ({ ...base, background: 'rgba(255, 255, 255, 0.05)', borderColor: 'var(--border-subtle)', color: 'var(--text-main)' }),
+                  control: (base) => ({ ...base, background: 'var(--bg-glass-light)', borderColor: 'var(--border-subtle)', color: 'var(--text-main)' }),
                   singleValue: (base) => ({ ...base, color: 'var(--text-main)' }),
                   input: (base) => ({ ...base, color: 'var(--text-main)' }),
                   menu: (base) => ({ ...base, background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', zIndex: 100 }),
@@ -286,7 +286,7 @@ export default function CreditForm({ onClose, session }) {
                 <h4 className="text-muted text-sm uppercase tracking-wider mb-2">Montos por Integrante</h4>
                 <div style={{ maxHeight: '40vh', overflowY: 'auto' }}>
                   {integrantes.map((int, i) => (
-                    <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', marginBottom: '1rem', border: '1px solid var(--border-subtle)' }} className="mb-4">
+                    <div key={i} style={{ padding: '1rem', background: 'var(--bg-glass-light)', borderRadius: '8px', marginBottom: '1rem', border: '1px solid var(--border-subtle)' }} className="mb-4">
                       <div className="font-bold mb-2 text-primary">{int.nombre_completo}</div>
                       <div className="flex gap-4">
                         <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>

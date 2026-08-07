@@ -1,10 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Sidebar from './Sidebar';
-import { RefreshCw, UserCircle, LogOut } from 'lucide-react';
+import { RefreshCw, UserCircle, LogOut, Sun, Moon } from 'lucide-react';
 
 export default function Layout({ session, perfil, configEmpresa }) {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'dark';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.classList.add('theme-light');
+    } else {
+      root.classList.remove('theme-light');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -44,6 +62,10 @@ export default function Layout({ session, perfil, configEmpresa }) {
             <button className="btn btn-outline" onClick={syncApp}>
               <RefreshCw size={16} className="text-primary" />
               <span className="hidden sm:inline" style={{ fontSize: '0.8rem' }}>Sincronizar Nube</span>
+            </button>
+            
+            <button className="btn btn-ghost" onClick={toggleTheme} title="Cambiar Tema">
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
           
           <div className="flex items-center gap-4 border-l border-subtle" style={{ paddingLeft: '1.5rem', borderLeft: '1px solid var(--border-subtle)' }}>

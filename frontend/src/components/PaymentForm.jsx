@@ -183,7 +183,7 @@ export default function PaymentForm({ credit, onClose, session }) {
   return (
     <Modal title={`Registrar Pago ${credit.tipo === 'GRUPAL' ? 'Grupal' : ''}`} onClose={onClose} maxWidth="900px">
         {error && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
             {error}
           </div>
         )}
@@ -228,7 +228,7 @@ export default function PaymentForm({ credit, onClose, session }) {
               <div className="mb-6">
                 <div className="table-container">
                   <table>
-                    <thead style={{ background: '#1e293b' }}>
+                    <thead style={{ background: 'var(--bg-table-header)' }}>
                       <tr>
                         <th>Cliente</th>
                         <th style={{ width: '120px', textAlign: 'center' }}>Abono ($)</th>
@@ -285,7 +285,7 @@ export default function PaymentForm({ credit, onClose, session }) {
               <div className="mb-6">
                 <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                   <table>
-                    <thead style={{ position: 'sticky', top: 0, background: '#1e293b', zIndex: 10 }}>
+                    <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-table-header)', zIndex: 10 }}>
                       <tr>
                         <th>Integrante</th>
                         <th style={{ width: '120px', textAlign: 'center' }}>Abono ($)</th>
@@ -340,7 +340,7 @@ export default function PaymentForm({ credit, onClose, session }) {
                 </div>
 
                 {/* Resumen Consolidado Inferior */}
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', marginTop: '1rem', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ background: 'var(--bg-glass)', padding: '1rem', borderRadius: '8px', marginTop: '1rem', border: '1px solid var(--border-subtle)' }}>
                   <div className="flex items-center gap-2 mb-2 text-primary">
                     <Calculator size={18} />
                     <strong style={{ fontSize: '1rem' }}>Total Consolidado del Grupo</strong>

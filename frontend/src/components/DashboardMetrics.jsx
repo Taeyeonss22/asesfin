@@ -109,7 +109,7 @@ export default function DashboardMetrics() {
       </div>
 
       {/* Faltas de Pago (Placeholder) */}
-      <div className="metric-card" style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+      <div className="metric-card" style={{ borderColor: 'var(--danger)' }}>
         <div className="metric-header">
           <div className="metric-title">FALTAS DE PAGO ACTIVAS</div>
           <div className="metric-icon-box icon-box-danger">

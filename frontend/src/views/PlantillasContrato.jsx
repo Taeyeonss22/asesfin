@@ -74,7 +74,7 @@ export default function PlantillasContrato() {
             <textarea 
               className="form-control" 
               rows="12" 
-              style={{ fontFamily: 'monospace', fontSize: '0.85rem', background: '#0f172a', resize: 'vertical' }}
+              style={{ fontFamily: 'monospace', fontSize: '0.85rem', background: 'var(--bg-base)', resize: 'vertical' }}
               value={p.contenido}
               onChange={(e) => handleChange(p.id, e.target.value)}
             />

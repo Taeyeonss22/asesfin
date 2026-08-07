@@ -126,7 +126,7 @@ export default function CortesCaja({ session }) {
         </div>
 
         <div className="flex gap-4 mb-4">
-          <div className="flex items-center gap-2" style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.5rem 1rem', flex: 1 }}>
+          <div className="flex items-center gap-2" style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.5rem 1rem', flex: 1 }}>
             <Search size={18} className="text-muted" />
             <input 
               type="text" 
@@ -209,7 +209,7 @@ export default function CortesCaja({ session }) {
                 <h4 className="text-sm font-bold mb-3 uppercase text-muted">Transacciones ({cortePagos.length})</h4>
                 <div className="table-container" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
                   <table>
-                    <thead style={{ position: 'sticky', top: 0, background: '#1e293b', zIndex: 10 }}>
+                    <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-table-header)', zIndex: 10 }}>
                       <tr>
                         <th>Hora</th>
                         <th>Cliente</th>
@@ -253,7 +253,7 @@ export default function CortesCaja({ session }) {
 
               {/* Right Column: Totals & Confirmation */}
               <div>
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ background: 'var(--bg-glass)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                   <h4 className="text-sm font-bold mb-3 uppercase text-muted">Resumen</h4>
                   <div className="flex justify-between mb-2 text-sm">
                     <span className="text-muted">Total Abonos:</span>

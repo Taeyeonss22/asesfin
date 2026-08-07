@@ -91,7 +91,7 @@ export default function PrintContract({ configEmpresa }) {
       margin: '0 auto',
       fontFamily: 'serif',
       lineHeight: '1.5',
-      color: '#000'
+      color: 'var(--text-inverse)'
     }}>
       
       {/* Encabezado */}

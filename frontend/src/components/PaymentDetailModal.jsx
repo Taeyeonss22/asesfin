@@ -53,7 +53,7 @@ export default function PaymentDetailModal({ pago, onClose }) {
                 <Camera size={14} /> Evidencia Fotográfica
               </div>
               {pago.evidencia_url ? (
-                <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#000', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: 'var(--bg-card-hover)', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img 
                     src={pago.evidencia_url} 
                     alt="Evidencia del cobro" 
@@ -61,7 +61,7 @@ export default function PaymentDetailModal({ pago, onClose }) {
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center text-muted" style={{ height: '200px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--border-subtle)' }}>
+                <div className="flex items-center justify-center text-muted" style={{ height: '200px', background: 'var(--bg-glass-light)', borderRadius: '8px', border: '1px dashed var(--border-subtle)' }}>
                   No disponible
                 </div>
               )}
@@ -74,7 +74,7 @@ export default function PaymentDetailModal({ pago, onClose }) {
               </div>
               {pago.latitud && pago.longitud ? (
                 <div className="flex flex-col h-full gap-3">
-                  <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)', height: '155px', position: 'relative' }}>
+                  <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: 'var(--bg-glass-light)', height: '155px', position: 'relative' }}>
                     <iframe 
                       width="100%" 
                       height="100%" 
@@ -96,7 +96,7 @@ export default function PaymentDetailModal({ pago, onClose }) {
                   </a>
                 </div>
               ) : (
-                <div className="flex items-center justify-center text-muted" style={{ height: '200px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--border-subtle)' }}>
+                <div className="flex items-center justify-center text-muted" style={{ height: '200px', background: 'var(--bg-glass-light)', borderRadius: '8px', border: '1px dashed var(--border-subtle)' }}>
                   No disponible
                 </div>
               )}
