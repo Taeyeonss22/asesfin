@@ -9,7 +9,8 @@ export default function DashboardMetrics() {
     abonos_hoy: 0,
     cartera_activa: 0, 
     creditos_activos: 0,
-    adeudo_total: 0 
+    adeudo_total: 0,
+    total_faltas: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +21,7 @@ export default function DashboardMetrics() {
     let carteraColocada = 0;
     let totalCreditos = 0;
     let totalAdeudo = 0;
+    let totalFaltas = 0;
 
     if (cData && cData.length > 0) {
       const creditIds = cData.map(c => c.credito_id);
@@ -46,6 +48,7 @@ export default function DashboardMetrics() {
         const enriched = enrichCreditData(credit, pagosByCredit[credit.credito_id] || [], parseFloat(credit.saldo_pendiente) || 0);
         if (enriched) {
           totalAdeudo += enriched.adeudo_total_real;
+          totalFaltas += enriched.faltas_computadas;
         }
       });
     }
@@ -67,7 +70,8 @@ export default function DashboardMetrics() {
       abonos_hoy: abonosHoy,
       cartera_activa: carteraColocada,
       creditos_activos: totalCreditos,
-      adeudo_total: totalAdeudo
+      adeudo_total: totalAdeudo,
+      total_faltas: totalFaltas
     });
     
     setLoading(false);
@@ -140,7 +144,7 @@ export default function DashboardMetrics() {
           </div>
         </div>
         <div className="metric-value danger">
-          0 faltas
+          {metrics.total_faltas} faltas
         </div>
         <div className="metric-sub">
           Regla: Cada 3 incompletos = 1 falta
