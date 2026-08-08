@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { exportToCSV } from '../../lib/exportUtils';
 import { AlertCircle, Download, RefreshCw } from 'lucide-react';
+import { enrichCreditData } from '../../lib/penalties';
 
 export default function FaltasReport() {
   const [data, setData] = useState([]);
@@ -12,17 +13,36 @@ export default function FaltasReport() {
 
   const fetchData = async () => {
     setLoading(true);
-    let query = supabase.from('vista_analisis_cartera').select('*');
+    let query = supabase.from('vista_saldos_creditos').select('*').in('estado', ['ACTIVO', 'MORA']);
     if (selectedZona !== 'ALL') query = query.eq('zona_id', selectedZona);
     
-    const { data: reportData, error } = await query;
+    const { data: cData, error } = await query;
     
-    if (!error && reportData) {
-      // Filter by min Faltas and sort descending
-      const faltasData = reportData
-        .filter(d => d.faltas >= minFaltas)
-        .sort((a, b) => b.faltas - a.faltas);
-      setData(faltasData);
+    if (!error && cData && cData.length > 0) {
+      const creditIds = cData.map(c => c.credito_id);
+      const { data: allPagos } = await supabase.from('pagos').select('*').in('credito_id', creditIds);
+
+      const pagosByCredit = {};
+      if (allPagos) {
+        allPagos.forEach(p => {
+          if (!pagosByCredit[p.credito_id]) pagosByCredit[p.credito_id] = [];
+          pagosByCredit[p.credito_id].push(p);
+        });
+      }
+
+      const reportData = [];
+      cData.forEach(credit => {
+        const enriched = enrichCreditData(credit, pagosByCredit[credit.credito_id] || [], parseFloat(credit.saldo_pendiente) || 0);
+        if (enriched && enriched.faltas_computadas >= minFaltas) {
+          reportData.push(enriched);
+        }
+      });
+
+      // Sort descending by faltas
+      reportData.sort((a, b) => b.faltas_computadas - a.faltas_computadas);
+      setData(reportData);
+    } else {
+      setData([]);
     }
 
     const { data: zData } = await supabase.from('zonas').select('*');
@@ -101,11 +121,11 @@ export default function FaltasReport() {
                   <tr key={row.credito_id}>
                     <td className="font-medium">CTR-{row.credito_id.split('-')[0].toUpperCase()}</td>
                     <td>{row.nombre_cliente || `Crédito ${row.tipo}`}</td>
-                    <td className="text-danger font-bold">${parseFloat(row.monto_atrasado).toLocaleString()}</td>
-                    <td>{row.pagos_omitidos}</td>
+                    <td className="text-danger font-bold">${parseFloat(row.adeudo_total_real || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</td>
+                    <td>{row.incompletos} periodos atrasados</td>
                     <td>
-                      <span className={`badge ${row.faltas >= 3 ? 'badge-mora' : 'badge-warning'}`} style={{ backgroundColor: row.faltas >= 3 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)', color: row.faltas >= 3 ? 'var(--danger)' : 'var(--warning)', border: 'none' }}>
-                        {row.faltas} faltas
+                      <span className={`badge ${row.faltas_computadas >= 3 ? 'badge-mora' : 'badge-warning'}`} style={{ backgroundColor: row.faltas_computadas >= 3 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)', color: row.faltas_computadas >= 3 ? 'var(--danger)' : 'var(--warning)', border: 'none' }}>
+                        {row.faltas_computadas} faltas
                       </span>
                     </td>
                     <td><span className="badge badge-default">{row.estado}</span></td>
