@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { enrichCreditData } from '../lib/penalties';
 
 export default function PrintTicket({ configEmpresa }) {
   const { id } = useParams(); // id del pago
@@ -19,7 +20,7 @@ export default function PrintTicket({ configEmpresa }) {
         .select(`
           *,
           perfiles(nombre_completo),
-          creditos(tipo, nombre_cliente, periodicidad, cuota_periodo, clientes(nombre_completo), grupos(nombre)),
+          creditos(tipo, nombre_cliente, periodicidad, cuota_periodo, fecha_inicio, monto_otorgado, saldo_pendiente, clientes(nombre_completo), grupos(nombre)),
           integrantes_grupo(nombre_completo)
         `)
         .eq('id', id)
@@ -27,8 +28,10 @@ export default function PrintTicket({ configEmpresa }) {
         
       if (err2) throw err2;
       
-      // Fetch all payments in the same transaction (same timestamp)
-      let consolidated = [];
+      // Fetch all payments for this credit to calculate current penalty/balance
+      let allPagos = [];
+      let adeudo_actual = 0;
+      
       if (pago) {
         const { data: siblingPagos } = await supabase
           .from('pagos')
@@ -42,7 +45,21 @@ export default function PrintTicket({ configEmpresa }) {
           consolidated = [pago];
         }
         
-        setTicketData({ primary: pago, siblings: consolidated });
+        const { data: todosPagos } = await supabase
+          .from('pagos')
+          .select('*')
+          .eq('credito_id', pago.credito_id)
+          .order('fecha_pago', { ascending: true });
+          
+        if (todosPagos) {
+          allPagos = todosPagos;
+          const enriched = enrichCreditData(pago.creditos, todosPagos, parseFloat(pago.creditos.saldo_pendiente || 0));
+          if (enriched) {
+             adeudo_actual = enriched.adeudo_total_real;
+          }
+        }
+        
+        setTicketData({ primary: pago, siblings: consolidated, adeudo_actual });
       }
       
       setTimeout(() => {
@@ -198,7 +215,13 @@ export default function PrintTicket({ configEmpresa }) {
         </div>
 
         <div className="divider"></div>
+
         <div className="row mt-2">
+          <span>Adeudo Restante:</span>
+          <span className="bold">${parseFloat(ticketData.adeudo_actual).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+        </div>
+
+        <div className="row mt-1">
           <span>Atendió:</span>
           <span>{ticketData.primary.perfiles?.nombre_completo || 'Sistema'}</span>
         </div>
