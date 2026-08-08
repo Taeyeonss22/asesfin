@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Map, Shield, Users, UserPlus, X } from 'lucide-react';
+import { Map, Shield, Users, UserPlus, X, PlusCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export default function CobradoresZonas({ session }) {
@@ -18,6 +18,11 @@ export default function CobradoresZonas({ session }) {
     rol: 'COBRADOR',
     zonas: []
   });
+
+  // Zone Modal State
+  const [showZoneModal, setShowZoneModal] = useState(false);
+  const [newZoneName, setNewZoneName] = useState('');
+  const [isSubmittingZone, setIsSubmittingZone] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -89,6 +94,29 @@ export default function CobradoresZonas({ session }) {
     }
   };
 
+  const handleCreateZone = async (e) => {
+    e.preventDefault();
+    if (!newZoneName.trim()) {
+      toast.error('Ingresa el nombre de la zona');
+      return;
+    }
+    try {
+      setIsSubmittingZone(true);
+      const { error } = await supabase.from('zonas').insert([{ nombre: newZoneName.trim() }]);
+      if (error) throw error;
+      
+      toast.success('Zona creada exitosamente');
+      setShowZoneModal(false);
+      setNewZoneName('');
+      fetchData();
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al crear zona: ' + error.message);
+    } finally {
+      setIsSubmittingZone(false);
+    }
+  };
+
   if (loading) return <div className="p-4 text-muted">Cargando personal...</div>;
 
   return (
@@ -98,9 +126,14 @@ export default function CobradoresZonas({ session }) {
           <Map size={24} className="text-primary" />
           <h1 style={{ margin: 0 }}>Cobradores y Zonas</h1>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <UserPlus size={18} /> Nuevo Usuario
-        </button>
+        <div className="flex gap-3">
+          <button className="btn btn-outline" onClick={() => setShowZoneModal(true)}>
+            <PlusCircle size={18} /> Nueva Zona
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <UserPlus size={18} /> Nuevo Usuario
+          </button>
+        </div>
       </div>
       
       <div className="solid-card">
@@ -249,6 +282,39 @@ export default function CobradoresZonas({ session }) {
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancelar</button>
                 <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
                   {isSubmitting ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nueva Zona */}
+      {showZoneModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg-glass-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="solid-card animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 style={{ margin: 0 }}>Crear Nueva Zona</h3>
+              <button className="btn btn-ghost" onClick={() => setShowZoneModal(false)}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleCreateZone}>
+              <div className="form-group mb-6">
+                <label>Nombre de la Zona</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={newZoneName}
+                  onChange={(e) => setNewZoneName(e.target.value)}
+                  placeholder="Ej. Zona Norte, Rafael, etc."
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 border-t border-subtle pt-4">
+                <button type="button" className="btn btn-outline" onClick={() => setShowZoneModal(false)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary" disabled={isSubmittingZone}>
+                  {isSubmittingZone ? 'Creando...' : 'Crear Zona'}
                 </button>
               </div>
             </form>
