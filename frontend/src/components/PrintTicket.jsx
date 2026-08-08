@@ -20,7 +20,7 @@ export default function PrintTicket({ configEmpresa }) {
         .select(`
           *,
           perfiles(nombre_completo),
-          creditos(tipo, nombre_cliente, periodicidad, cuota_periodo, fecha_inicio, monto_otorgado, saldo_pendiente, clientes(nombre_completo), grupos(nombre)),
+          creditos(tipo, nombre_cliente, periodicidad, cuota_periodo, fecha_inicio, monto_otorgado, clientes(nombre_completo), grupos(nombre)),
           integrantes_grupo(nombre_completo)
         `)
         .eq('id', id)
@@ -51,9 +51,16 @@ export default function PrintTicket({ configEmpresa }) {
           .eq('credito_id', pago.credito_id)
           .order('fecha_pago', { ascending: true });
           
+        const { data: vistaData } = await supabase
+          .from('vista_saldos_creditos')
+          .select('saldo_pendiente')
+          .eq('credito_id', pago.credito_id)
+          .single();
+          
         if (todosPagos) {
           allPagos = todosPagos;
-          const enriched = enrichCreditData(pago.creditos, todosPagos, parseFloat(pago.creditos.saldo_pendiente || 0));
+          const saldoPendienteBase = parseFloat(vistaData?.saldo_pendiente || 0);
+          const enriched = enrichCreditData(pago.creditos, todosPagos, saldoPendienteBase);
           if (enriched) {
              adeudo_actual = enriched.adeudo_total_real;
           }
