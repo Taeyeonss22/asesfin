@@ -31,6 +31,7 @@ export default function PrintTicket({ configEmpresa }) {
       // Fetch all payments for this credit to calculate current penalty/balance
       let allPagos = [];
       let adeudo_actual = 0;
+      let consolidated = [];
       
       if (pago) {
         const { data: siblingPagos } = await supabase
