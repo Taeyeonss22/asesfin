@@ -161,23 +161,23 @@ export const PrintService = {
         const time = new Date(p.fecha_pago).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         let client = p.creditos?.nombre_cliente || p.creditos?.clientes?.nombre_completo || p.creditos?.grupos?.nombre || p.credito_id.substring(0,8);
         if (p.creditos?.tipo === 'GRUPAL' && p.integrantes_grupo) {
-          client = \`\${client} - \${p.integrantes_grupo.nombre_completo.substring(0, 10)}\`;
+          client = `${client} - ${p.integrantes_grupo.nombre_completo.substring(0, 10)}`;
         } else {
           client = client.substring(0, 15);
         }
         
-        return \`
+        return `
           <div style="font-size: 10px; margin-bottom: 3px;">
-            <div>\${client} (\${p.tipo.substring(0,2)})</div>
+            <div>${client} (${p.tipo.substring(0,2)})</div>
             <div class="row">
-              <span>\${time}</span>
-              <span class="bold">$\${p.monto}</span>
+              <span>${time}</span>
+              <span class="bold">$${p.monto}</span>
             </div>
           </div>
-        \`;
+        `;
       }).join('');
 
-      const html = \`
+      const html = `
         <html>
           <head>
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
@@ -191,7 +191,7 @@ export const PrintService = {
           </head>
           <body>
             <div class="center bold" style="font-size: 18px; margin-bottom: 5px;">
-              \${config?.nombre_empresa || 'Empresa'}
+              ${config?.nombre_empresa || 'Empresa'}
             </div>
             
             <div class="divider"></div>
@@ -200,42 +200,42 @@ export const PrintService = {
             
             <div class="row">
               <span>Fecha:</span>
-              <span>\${fechaCorte}</span>
+              <span>${fechaCorte}</span>
             </div>
             <div class="row">
               <span>Folio:</span>
-              <span>\${folio}</span>
+              <span>${folio}</span>
             </div>
             <div class="row">
               <span>Cobrador:</span>
-              <span>\${cobrador}</span>
+              <span>${cobrador}</span>
             </div>
             
             <div class="divider"></div>
             
             <div class="center bold" style="margin-bottom: 10px;">DETALLE DE COBROS</div>
-            \${pagosHtml}
+            ${pagosHtml}
             
             <div class="divider"></div>
             
             <div class="row">
               <span>T. Abonos:</span>
-              <span>$\${parseFloat(corte.total_abonos).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+              <span>$${parseFloat(corte.total_abonos).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
             </div>
             <div class="row">
               <span>T. Ahorros:</span>
-              <span>$\${parseFloat(corte.total_ahorros).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+              <span>$${parseFloat(corte.total_ahorros).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
             </div>
             <div class="row">
               <span>T. Mora:</span>
-              <span>$\${parseFloat(corte.total_mora).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+              <span>$${parseFloat(corte.total_mora).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
             </div>
             
             <div class="divider" style="border-bottom: 2px solid #000;"></div>
             
             <div class="row bold" style="font-size: 16px;">
               <span>ENTREGAR:</span>
-              <span>$\${parseFloat(corte.gran_total).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+              <span>$${parseFloat(corte.gran_total).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
             </div>
             
             <div class="divider"></div>
@@ -250,7 +250,7 @@ export const PrintService = {
             </div>
           </body>
         </html>
-      \`;
+      `;
 
       await Print.printAsync({
         html,
