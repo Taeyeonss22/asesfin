@@ -21,6 +21,7 @@ import CobradoresZonas from './views/CobradoresZonas';
 
 import PrintContract from './components/PrintContract';
 import PrintTicket from './components/PrintTicket';
+import PrintCorteTicket from './components/PrintCorteTicket';
 import GlobalNotifications from './components/GlobalNotifications';
 import { Toaster } from 'react-hot-toast';
 
@@ -114,6 +115,7 @@ function App() {
       <Routes>
         <Route path="/print/contract/:id" element={session ? <PrintContract configEmpresa={configEmpresa} /> : <Navigate to="/" />} />
         <Route path="/print/ticket/:id" element={session ? <PrintTicket configEmpresa={configEmpresa} /> : <Navigate to="/" />} />
+        <Route path="/print/corte/:id" element={session ? <PrintCorteTicket configEmpresa={configEmpresa} /> : <Navigate to="/" />} />
         
         {/* Protected Layout Routes */}
         <Route 

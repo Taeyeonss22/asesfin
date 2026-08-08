@@ -3,7 +3,7 @@ import Modal from '../components/Modal';
 import { supabase } from '../lib/supabase';
 import { exportToCSV } from '../lib/exportUtils';
 import PaymentDetailModal from '../components/PaymentDetailModal';
-import { FileText, CheckCircle, Search, Calendar, ChevronRight, X, Clock } from 'lucide-react';
+import { FileText, CheckCircle, Search, Calendar, ChevronRight, X, Clock, RefreshCw, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function CortesCaja({ session }) {
@@ -18,6 +18,7 @@ export default function CortesCaja({ session }) {
   const [notas, setNotas] = useState('');
   const [selectedPagoDetail, setSelectedPagoDetail] = useState(null);
   const [confirming, setConfirming] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     fetchCortes();
@@ -91,6 +92,62 @@ export default function CortesCaja({ session }) {
     }
   };
 
+  const handleGenerarCorte = async () => {
+    if (!window.confirm('¿Estás seguro de generar tu corte con todos los cobros sueltos que has registrado?')) return;
+    setGenerating(true);
+    try {
+      const { data: pagos, error: fetchErr } = await supabase
+        .from('pagos')
+        .select('*')
+        .is('corte_id', null)
+        .eq('registrado_por', session.user.id);
+        
+      if (fetchErr) throw fetchErr;
+      if (!pagos || pagos.length === 0) {
+        alert('No tienes cobros pendientes por asignar a un corte.');
+        setGenerating(false);
+        return;
+      }
+
+      const total_abonos = pagos.filter(p => p.tipo === 'ABONO').reduce((sum, p) => sum + parseFloat(p.monto), 0);
+      const total_ahorros = pagos.filter(p => p.tipo === 'AHORRO').reduce((sum, p) => sum + parseFloat(p.monto), 0);
+      const total_mora = pagos.filter(p => p.tipo === 'MORA').reduce((sum, p) => sum + parseFloat(p.monto), 0);
+      const gran_total = total_abonos + total_ahorros + total_mora;
+
+      const { data: corteData, error: corteErr } = await supabase
+        .from('cortes_diarios')
+        .insert([{
+          fecha: new Date().toISOString(),
+          cobrador_id: session.user.id,
+          total_abonos,
+          total_ahorros,
+          total_mora,
+          gran_total,
+          estado: 'PENDIENTE'
+        }])
+        .select()
+        .single();
+        
+      if (corteErr) throw corteErr;
+
+      const { error: updateErr } = await supabase
+        .from('pagos')
+        .update({ corte_id: corteData.id })
+        .is('corte_id', null)
+        .eq('registrado_por', session.user.id);
+        
+      if (updateErr) throw updateErr;
+
+      alert(`Corte generado exitosamente con folio #${corteData.id.split('-')[0].toUpperCase()}`);
+      fetchCortes();
+    } catch (err) {
+      console.error(err);
+      alert('Error generando corte: ' + err.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const filteredCortes = cortes.filter(c => {
     const cobradorName = c.cobrador?.nombre_completo?.toLowerCase() || '';
     const dateStr = format(new Date(c.fecha), 'dd/MM/yyyy');
@@ -103,6 +160,15 @@ export default function CortesCaja({ session }) {
         <div>
           <h2>Cortes de Caja</h2>
           <p className="text-muted">Revisa y confirma los cortes diarios de los cobradores.</p>
+        </div>
+        <div className="flex gap-3">
+          <button className="btn btn-outline" onClick={fetchCortes} disabled={loading || generating}>
+            <RefreshCw size={16} className={loading ? 'loading-spinner' : ''} style={{ border: 'none' }} />
+            Actualizar
+          </button>
+          <button className="btn btn-primary" onClick={handleGenerarCorte} disabled={loading || generating}>
+            <CheckCircle size={16} /> Generar Mi Corte
+          </button>
         </div>
       </div>
 
@@ -191,13 +257,22 @@ export default function CortesCaja({ session }) {
       {selectedCorte && (
         <Modal 
           title={
-            <div>
-              <h3 style={{ margin: 0 }}>Detalle de Corte de Caja</h3>
-              <div className="text-sm text-muted mt-1 flex items-center gap-2">
-                <span>Cobrador: {selectedCorte.cobrador?.nombre_completo}</span>
-                <span>•</span>
-                <span>Fecha: {format(new Date(selectedCorte.fecha), 'dd/MM/yyyy HH:mm')}</span>
+            <div className="flex justify-between items-center w-full" style={{ paddingRight: '2rem' }}>
+              <div>
+                <h3 style={{ margin: 0 }}>Detalle de Corte de Caja</h3>
+                <div className="text-sm text-muted mt-1 flex items-center gap-2">
+                  <span>Cobrador: {selectedCorte.cobrador?.nombre_completo}</span>
+                  <span>•</span>
+                  <span>Fecha: {format(new Date(selectedCorte.fecha), 'dd/MM/yyyy HH:mm')}</span>
+                </div>
               </div>
+              <button 
+                className="btn btn-outline flex items-center gap-2"
+                style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}
+                onClick={() => window.open(`/print/corte/${selectedCorte.id}`, '_blank')}
+              >
+                <Printer size={16} /> Imprimir Ticket
+              </button>
             </div>
           }
           onClose={() => setSelectedCorte(null)}
