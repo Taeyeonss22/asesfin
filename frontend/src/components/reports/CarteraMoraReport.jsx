@@ -34,8 +34,8 @@ export default function CarteraMoraReport() {
         const enriched = enrichCreditData(credit, pagos, parseFloat(credit.saldo_pendiente) || 0);
         
         if (enriched) {
-          // Si tiene incompletos o está vencido, consideramos su adeudo real como riesgo
-          const isAtRisk = enriched.incompletos > 0 || enriched.esta_vencido;
+          // Si tiene pagos omitidos o está vencido, consideramos su adeudo real como riesgo
+          const isAtRisk = enriched.pagos_omitidos > 0 || enriched.esta_vencido;
           const montoAtrasado = isAtRisk ? enriched.adeudo_total_real : 0;
           
           if (montoAtrasado > 0) {
@@ -135,7 +135,7 @@ export default function CarteraMoraReport() {
                     <td>-</td>
                     <td className="text-danger font-bold">${parseFloat(row.monto_atrasado).toLocaleString()}</td>
                     <td>
-                      <span className="badge badge-mora">{row.incompletos} pagos</span>
+                      <span className="badge badge-mora">{row.pagos_omitidos} pagos</span>
                     </td>
                   </tr>
                 ))

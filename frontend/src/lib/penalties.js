@@ -101,6 +101,8 @@ export const enrichCreditData = (credit, pagos = [], saldo_pendiente_base = 0) =
     ...credit,
     fecha_vencimiento: ultimaFecha.toISOString().split('T')[0],
     incompletos,
+    faltas_directas: faltasDirectas,
+    pagos_omitidos: faltasDirectas + incompletos,
     faltas_computadas: numero_faltas,
     costo_faltas: costo_faltas_total,
     moratorio: moratorio_vencimiento,
