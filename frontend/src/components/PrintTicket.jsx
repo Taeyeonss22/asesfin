@@ -13,20 +13,37 @@ export default function PrintTicket({ configEmpresa }) {
     const fetchTicket = async () => {
       try {
 
-      // Fetch payment with all joins
+      // Fetch primary payment
       const { data: pago, error: err2 } = await supabase
         .from('pagos')
         .select(`
           *,
           perfiles(nombre_completo),
-          creditos(tipo, nombre_cliente, periodicidad, cuota_periodo),
+          creditos(tipo, nombre_cliente, periodicidad, cuota_periodo, clientes(nombre_completo), grupos(nombre)),
           integrantes_grupo(nombre_completo)
         `)
         .eq('id', id)
         .single();
         
       if (err2) throw err2;
-      if (pago) setTicketData(pago);
+      
+      // Fetch all payments in the same transaction (same timestamp)
+      let consolidated = [];
+      if (pago) {
+        const { data: siblingPagos } = await supabase
+          .from('pagos')
+          .select('*')
+          .eq('credito_id', pago.credito_id)
+          .eq('fecha_pago', pago.fecha_pago);
+        
+        if (siblingPagos) {
+          consolidated = siblingPagos;
+        } else {
+          consolidated = [pago];
+        }
+        
+        setTicketData({ primary: pago, siblings: consolidated });
+      }
       
       setTimeout(() => {
         window.print();
@@ -95,33 +112,63 @@ export default function PrintTicket({ configEmpresa }) {
         
         <div className="row">
           <span>Fecha:</span>
-          <span>{format(new Date(ticketData.fecha_pago), 'dd/MM/yy HH:mm')}</span>
+          <span>{format(new Date(ticketData.primary.fecha_pago), 'dd/MM/yy HH:mm')}</span>
         </div>
         <div className="row">
           <span>Folio Pago:</span>
-          <span>{ticketData.id.split('-')[0].toUpperCase()}</span>
+          <span>{ticketData.primary.id.split('-')[0].toUpperCase()}</span>
         </div>
         
         <div className="divider"></div>
 
         <div style={{ marginBottom: '5px' }}>
           <span className="bold">Cliente: </span>
-          {ticketData.creditos.tipo === 'INDIVIDUAL' 
-            ? ticketData.creditos.nombre_cliente 
-            : ticketData.integrantes_grupo?.nombre_completo || 'Pago Grupal'}
+          {ticketData.primary.creditos.tipo === 'INDIVIDUAL' 
+            ? (ticketData.primary.creditos.nombre_cliente || ticketData.primary.creditos.clientes?.nombre_completo)
+            : (ticketData.primary.integrantes_grupo?.nombre_completo || ticketData.primary.creditos.grupos?.nombre || 'Pago Grupal')}
         </div>
+
+        {ticketData.primary.numero_pago && (
+          <div className="row">
+            <span>Período/Semana:</span>
+            <span className="bold">{ticketData.primary.numero_pago}</span>
+          </div>
+        )}
         
-        <div className="row">
-          <span>Monto Abonado:</span>
-          <span className="bold">${ticketData.monto}</span>
+        <div className="divider"></div>
+
+        <div className="center bold" style={{ margin: '5px 0' }}>Desglose:</div>
+        
+        {ticketData.siblings.find(p => p.tipo === 'ABONO') && (
+          <div className="row">
+            <span>Abono a Crédito:</span>
+            <span>${parseFloat(ticketData.siblings.find(p => p.tipo === 'ABONO').monto).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+          </div>
+        )}
+        {ticketData.siblings.find(p => p.tipo === 'AHORRO') && (
+          <div className="row">
+            <span>Ahorro:</span>
+            <span>${parseFloat(ticketData.siblings.find(p => p.tipo === 'AHORRO').monto).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+          </div>
+        )}
+        {ticketData.siblings.find(p => p.tipo === 'MORA') && (
+          <div className="row">
+            <span>Moratorios/Faltas:</span>
+            <span>${parseFloat(ticketData.siblings.find(p => p.tipo === 'MORA').monto).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+          </div>
+        )}
+
+        <div className="divider"></div>
+
+        <div className="row bold">
+          <span>Total Pagado:</span>
+          <span>${ticketData.siblings.reduce((sum, p) => sum + parseFloat(p.monto), 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
         </div>
-        <div className="row">
-          <span>Tipo:</span>
-          <span>{ticketData.tipo}</span>
-        </div>
-        <div className="row">
+
+        <div className="divider"></div>
+        <div className="row mt-2">
           <span>Atendió:</span>
-          <span>{ticketData.perfiles?.nombre_completo || 'Sistema'}</span>
+          <span>{ticketData.primary.perfiles?.nombre_completo || 'Sistema'}</span>
         </div>
 
         <div className="divider"></div>
