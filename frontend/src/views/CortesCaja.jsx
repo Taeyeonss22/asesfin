@@ -55,7 +55,7 @@ export default function CortesCaja({ session }) {
         .from('pagos')
         .select(`
           *,
-          creditos (nombre_cliente, credito_id, tipo),
+          creditos (nombre_cliente, tipo),
           pagos_metadata (latitud, longitud, evidencia_url)
         `)
         .eq('corte_id', corte.id)
