@@ -10,6 +10,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import CarteraScreen from './src/screens/CarteraScreen';
 import CobroScreen from './src/screens/CobroScreen';
 import CorteScreen from './src/screens/CorteScreen';
+import HistorialScreen from './src/screens/HistorialScreen';
 import GlobalNotifications from './src/components/GlobalNotifications';
 import Toast from 'react-native-toast-message';
 
@@ -68,6 +69,11 @@ export default function App() {
           name="Corte" 
           component={CorteScreen}
           options={{ title: 'Corte de Caja' }}
+        />
+        <Stack.Screen 
+          name="Historial" 
+          component={HistorialScreen}
+          options={{ title: 'Historial' }}
         />
           </>
         ) : (

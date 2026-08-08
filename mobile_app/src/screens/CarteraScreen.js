@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { LogOut, RefreshCw, Wifi, WifiOff, FileText } from 'lucide-react-native';
+import { LogOut, RefreshCw, Wifi, WifiOff, FileText, Calendar } from 'lucide-react-native';
 import { SyncService } from '../lib/syncService';
 import * as Network from 'expo-network';
 
@@ -167,13 +167,23 @@ export default function CarteraScreen() {
       )}
       
       <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.corteButton}
-          onPress={() => navigation.navigate('Corte')}
-        >
-          <FileText size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.corteButtonText}>Corte de Caja</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+          <TouchableOpacity 
+            style={[styles.corteButton, { flex: 1, backgroundColor: '#334155' }]}
+            onPress={() => navigation.navigate('Historial')}
+          >
+            <Calendar size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.corteButtonText}>Historial</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.corteButton, { flex: 1 }]}
+            onPress={() => navigation.navigate('Corte')}
+          >
+            <FileText size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.corteButtonText}>Corte Diario</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
