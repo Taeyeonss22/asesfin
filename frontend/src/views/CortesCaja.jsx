@@ -227,9 +227,9 @@ export default function CortesCaja({ session }) {
                             className="cursor-pointer hover:bg-slate-800 transition-colors"
                             onClick={() => setSelectedPagoDetail({
                               ...p,
-                              latitud: p.pagos_metadata?.[0]?.latitud || p.pagos_metadata?.latitud,
-                              longitud: p.pagos_metadata?.[0]?.longitud || p.pagos_metadata?.longitud,
-                              evidencia_url: p.pagos_metadata?.[0]?.evidencia_url || p.pagos_metadata?.evidencia_url,
+                              latitud: (Array.isArray(p.pagos_metadata) ? p.pagos_metadata[0]?.latitud : p.pagos_metadata?.latitud) || p.latitud,
+                              longitud: (Array.isArray(p.pagos_metadata) ? p.pagos_metadata[0]?.longitud : p.pagos_metadata?.longitud) || p.longitud,
+                              evidencia_url: (Array.isArray(p.pagos_metadata) ? p.pagos_metadata[0]?.evidencia_url : p.pagos_metadata?.evidencia_url) || p.evidencia_url,
                               tipo_pago: p.tipo,
                               cliente_nombre: p.creditos?.nombre_cliente || p.credito_id.substring(0,8),
                               cobrador_nombre: selectedCorte.perfiles?.nombre_completo // already filtered by cobrador
