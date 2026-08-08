@@ -47,6 +47,7 @@ export const enrichCreditData = (credit, pagos = [], saldo_pendiente_base = 0) =
 
   const numPeriodos = credit.numero_periodos || 16;
   let incompletos = 0;
+  let faltasDirectas = 0;
   let ultimaFecha = new Date(credit.fecha_inicio);
 
   for (let i = 1; i <= numPeriodos; i++) {
@@ -54,14 +55,21 @@ export const enrichCreditData = (credit, pagos = [], saldo_pendiente_base = 0) =
     ultimaFecha = fechaProg;
     const pagado = pagosAgrupados[i] || 0;
     
-    // Si la cuota no se cubrió (con tolerancia de 1 peso) y la fecha ya pasó
-    if (pagado < (credit.cuota_periodo - 1) && fechaProg < hoy) {
-      incompletos++;
+    // Solo se evalúa si la fecha programada ya pasó
+    if (fechaProg < hoy) {
+      if (pagado === 0) {
+        // Pago nulo genera 1 falta directa
+        faltasDirectas++;
+      } else if (pagado < (credit.cuota_periodo - 1)) {
+        // Pago parcial genera 1 incompleto
+        incompletos++;
+      }
     }
   }
 
   // Regla 1: Faltas de Pago
-  const numero_faltas = Math.floor(incompletos / 3);
+  // Faltas totales = faltas por $0 + 1 falta por cada 3 incompletos
+  const numero_faltas = faltasDirectas + Math.floor(incompletos / 3);
   const costo_por_falta = (credit.monto_otorgado / 1000) * 4 * 7;
   const costo_faltas_total = costo_por_falta * numero_faltas;
 
