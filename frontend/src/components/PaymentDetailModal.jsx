@@ -1,14 +1,23 @@
 import React from 'react';
-import { MapPin, Camera, User, Clock, DollarSign } from 'lucide-react';
+import { MapPin, Camera, User, Clock, DollarSign, Printer } from 'lucide-react';
 import Modal from './Modal';
 
 export default function PaymentDetailModal({ pago, onClose }) {
   if (!pago) return null;
 
   const title = (
-    <div className="flex items-center gap-2">
-      <DollarSign className="text-primary" />
-      Detalle de Cobro
+    <div className="flex justify-between items-center w-full" style={{ paddingRight: '2rem' }}>
+      <div className="flex items-center gap-2">
+        <DollarSign className="text-primary" />
+        Detalle de Cobro
+      </div>
+      <button 
+        className="btn btn-outline flex items-center gap-2"
+        style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', borderColor: 'var(--border-subtle)' }}
+        onClick={() => window.open(`/print/ticket/${pago.pago_id || pago.id}`, '_blank')}
+      >
+        <Printer size={16} /> Reimprimir Ticket
+      </button>
     </div>
   );
 
