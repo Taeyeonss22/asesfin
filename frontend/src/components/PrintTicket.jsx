@@ -32,7 +32,7 @@ export default function PrintTicket({ configEmpresa }) {
       if (pago) {
         const { data: siblingPagos } = await supabase
           .from('pagos')
-          .select('*')
+          .select('*, integrantes_grupo(nombre_completo)')
           .eq('credito_id', pago.credito_id)
           .eq('fecha_pago', pago.fecha_pago);
         
@@ -122,10 +122,10 @@ export default function PrintTicket({ configEmpresa }) {
         <div className="divider"></div>
 
         <div style={{ marginBottom: '5px' }}>
-          <span className="bold">Cliente: </span>
+          <span className="bold">Cliente / Grupo: </span>
           {ticketData.primary.creditos.tipo === 'INDIVIDUAL' 
             ? (ticketData.primary.creditos.nombre_cliente || ticketData.primary.creditos.clientes?.nombre_completo)
-            : (ticketData.primary.integrantes_grupo?.nombre_completo || ticketData.primary.creditos.grupos?.nombre || 'Pago Grupal')}
+            : (ticketData.primary.creditos.grupos?.nombre || 'Grupo Solidario')}
         </div>
 
         {ticketData.primary.numero_pago && (
@@ -139,23 +139,55 @@ export default function PrintTicket({ configEmpresa }) {
 
         <div className="center bold" style={{ margin: '5px 0' }}>Desglose:</div>
         
-        {ticketData.siblings.find(p => p.tipo === 'ABONO') && (
-          <div className="row">
-            <span>Abono a Crédito:</span>
-            <span>${parseFloat(ticketData.siblings.find(p => p.tipo === 'ABONO').monto).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
-          </div>
-        )}
-        {ticketData.siblings.find(p => p.tipo === 'AHORRO') && (
-          <div className="row">
-            <span>Ahorro:</span>
-            <span>${parseFloat(ticketData.siblings.find(p => p.tipo === 'AHORRO').monto).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
-          </div>
-        )}
-        {ticketData.siblings.find(p => p.tipo === 'MORA') && (
-          <div className="row">
-            <span>Moratorios/Faltas:</span>
-            <span>${parseFloat(ticketData.siblings.find(p => p.tipo === 'MORA').monto).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
-          </div>
+        {ticketData.primary.creditos.tipo === 'INDIVIDUAL' ? (
+          <>
+            {ticketData.siblings.find(p => p.tipo === 'ABONO') && (
+              <div className="row">
+                <span>Abono a Crédito:</span>
+                <span>${ticketData.siblings.filter(p => p.tipo === 'ABONO').reduce((sum, p) => sum + parseFloat(p.monto), 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+              </div>
+            )}
+            {ticketData.siblings.find(p => p.tipo === 'AHORRO') && (
+              <div className="row">
+                <span>Ahorro:</span>
+                <span>${ticketData.siblings.filter(p => p.tipo === 'AHORRO').reduce((sum, p) => sum + parseFloat(p.monto), 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+              </div>
+            )}
+            {ticketData.siblings.find(p => p.tipo === 'MORA') && (
+              <div className="row">
+                <span>Moratorios/Faltas:</span>
+                <span>${ticketData.siblings.filter(p => p.tipo === 'MORA').reduce((sum, p) => sum + parseFloat(p.monto), 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Desglose por Integrante para Grupos */}
+            {Object.entries(
+              ticketData.siblings.reduce((acc, p) => {
+                const intId = p.integrante_id || 'general';
+                if (!acc[intId]) {
+                  acc[intId] = {
+                    nombre: p.integrantes_grupo?.nombre_completo || 'Pago General',
+                    abono: 0, ahorro: 0, mora: 0, total: 0
+                  };
+                }
+                const amt = parseFloat(p.monto);
+                if (p.tipo === 'ABONO') acc[intId].abono += amt;
+                if (p.tipo === 'AHORRO') acc[intId].ahorro += amt;
+                if (p.tipo === 'MORA') acc[intId].mora += amt;
+                acc[intId].total += amt;
+                return acc;
+              }, {})
+            ).map(([intId, dt]) => (
+              <div key={intId} style={{ marginBottom: '8px' }}>
+                <div className="bold" style={{ fontSize: '10px' }}>- {dt.nombre}</div>
+                {dt.abono > 0 && <div className="row" style={{ fontSize: '10px' }}><span>Abono:</span><span>${dt.abono.toLocaleString('es-MX', {minimumFractionDigits:2})}</span></div>}
+                {dt.ahorro > 0 && <div className="row" style={{ fontSize: '10px' }}><span>Ahorro:</span><span>${dt.ahorro.toLocaleString('es-MX', {minimumFractionDigits:2})}</span></div>}
+                {dt.mora > 0 && <div className="row" style={{ fontSize: '10px' }}><span>Mora/Faltas:</span><span>${dt.mora.toLocaleString('es-MX', {minimumFractionDigits:2})}</span></div>}
+              </div>
+            ))}
+          </>
         )}
 
         <div className="divider"></div>
