@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { exportToCSV } from '../../lib/exportUtils';
 import { AlertTriangle, Download, RefreshCw, Filter } from 'lucide-react';
+import { enrichCreditData } from '../../lib/penalties';
 
 export default function CarteraMoraReport() {
   const [data, setData] = useState([]);
@@ -14,27 +15,60 @@ export default function CarteraMoraReport() {
 
   const fetchData = async () => {
     setLoading(true);
-    let query = supabase.from('vista_analisis_cartera').select('*');
+    let query = supabase.from('vista_saldos_creditos').select('*').in('estado', ['ACTIVO', 'MORA']);
     if (selectedZona !== 'ALL') query = query.eq('zona_id', selectedZona);
     
-    const { data: reportData, error } = await query;
+    const { data: cData, error } = await query;
     
-    if (!error && reportData) {
+    if (!error && cData && cData.length > 0) {
+      const creditIds = cData.map(c => c.credito_id);
+      const { data: allPagos } = await queryPagos(creditIds); // Helper
+
+      const reportData = [];
+      let riesgo = 0;
+      let total = 0;
+
+      cData.forEach(credit => {
+        total += parseFloat(credit.monto_otorgado) || 0;
+        const pagos = allPagos.filter(p => p.credito_id === credit.credito_id);
+        const enriched = enrichCreditData(credit, pagos, parseFloat(credit.saldo_pendiente) || 0);
+        
+        if (enriched) {
+          // Si tiene incompletos o está vencido, consideramos su adeudo real como riesgo
+          const isAtRisk = enriched.incompletos > 0 || enriched.esta_vencido;
+          const montoAtrasado = isAtRisk ? enriched.adeudo_total_real : 0;
+          
+          if (montoAtrasado > 0) {
+            riesgo += montoAtrasado;
+          }
+          
+          reportData.push({
+            ...enriched,
+            monto_atrasado: montoAtrasado,
+            total_pagado: pagos.reduce((sum, p) => sum + parseFloat(p.monto || 0), 0)
+          });
+        }
+      });
+
       // Sort by highest delay
       reportData.sort((a, b) => b.monto_atrasado - a.monto_atrasado);
       setData(reportData);
 
-      const riesgo = reportData.reduce((acc, curr) => curr.monto_atrasado > 0 ? acc + parseFloat(curr.monto_atrasado) : acc, 0);
-      const total = reportData.reduce((acc, curr) => acc + parseFloat(curr.monto_otorgado), 0);
       const par = total > 0 ? (riesgo / total) * 100 : 0;
-      
       setParInfo({ cartera_riesgo: riesgo, cartera_total: total, par });
+    } else {
+      setData([]);
+      setParInfo({ cartera_riesgo: 0, cartera_total: 0, par: 0 });
     }
 
     const { data: zData } = await supabase.from('zonas').select('*');
     if (zData) setZonas(zData);
 
     setLoading(false);
+  };
+
+  const queryPagos = async (creditIds) => {
+    return await supabase.from('pagos').select('*').in('credito_id', creditIds);
   };
 
   useEffect(() => {
@@ -98,10 +132,10 @@ export default function CarteraMoraReport() {
                     <td>{row.nombre_cliente || `Crédito ${row.tipo}`}</td>
                     <td>${parseFloat(row.monto_otorgado).toLocaleString()}</td>
                     <td className="text-success">${parseFloat(row.total_pagado).toLocaleString()}</td>
-                    <td>${parseFloat(row.monto_esperado).toLocaleString()}</td>
+                    <td>-</td>
                     <td className="text-danger font-bold">${parseFloat(row.monto_atrasado).toLocaleString()}</td>
                     <td>
-                      <span className="badge badge-mora">{row.pagos_omitidos} pagos</span>
+                      <span className="badge badge-mora">{row.incompletos} pagos</span>
                     </td>
                   </tr>
                 ))
