@@ -85,6 +85,7 @@ SELECT
   c.estado,
   c.fecha_inicio,
   c.numero_periodos,
+  c.cuota_periodo,
   c.total_a_pagar,
   COALESCE(SUM(p.monto), 0) as total_pagado,
   c.total_a_pagar - COALESCE(SUM(p.monto), 0) as saldo_pendiente
@@ -106,6 +107,7 @@ GROUP BY
   c.estado,
   c.fecha_inicio,
   c.numero_periodos,
+  c.cuota_periodo,
   c.total_a_pagar;
 
 -- 7. Add RLS Policies
