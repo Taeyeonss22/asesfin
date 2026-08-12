@@ -32,6 +32,22 @@ export default function Dashboard({ session, perfil }) {
     };
   }, []);
 
+  const handleWipe = async () => {
+    if (!window.confirm("¿Seguro que quieres borrar todos los datos de prueba?")) return;
+    try {
+      await supabase.from('pagos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('integrantes_grupo').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('creditos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('cortes_diarios').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('grupos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('clientes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      alert("Limpieza terminada con éxito.");
+      setMetricsKey(k => k + 1);
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       {/* Page Header */}
@@ -40,9 +56,14 @@ export default function Dashboard({ session, perfil }) {
           <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Dashboard Operativo de Cobranza</h1>
           <p className="text-muted">Resumen en tiempo real de cartera activa, ingresos del día y seguimiento de faltas.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowCreditForm(true)}>
-          <Plus size={18} /> Otorgar Nuevo Crédito
-        </button>
+        <div className="flex gap-2">
+          <button className="btn btn-secondary" onClick={handleWipe}>
+            Limpiar BD
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowCreditForm(true)}>
+            <Plus size={18} /> Otorgar Nuevo Crédito
+          </button>
+        </div>
       </div>
 
       {/* Metrics Row */}
