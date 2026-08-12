@@ -35,16 +35,27 @@ export default function Dashboard({ session, perfil }) {
   const handleWipe = async () => {
     if (!window.confirm("¿Seguro que quieres borrar todos los datos de prueba?")) return;
     try {
-      await supabase.from('pagos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('integrantes_grupo').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('creditos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('cortes_diarios').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('grupos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('clientes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      alert("Limpieza terminada con éxito.");
-      setMetricsKey(k => k + 1);
+      const deleteTable = async (table) => {
+        const { data, error } = await supabase.from(table).select('id');
+        if (error) throw new Error(`Error leyendo ${table}: ${error.message}`);
+        if (data && data.length > 0) {
+          const ids = data.map(r => r.id);
+          const { error: delErr } = await supabase.from(table).delete().in('id', ids);
+          if (delErr) throw new Error(`Error borrando ${table}: ${delErr.message}`);
+        }
+      };
+
+      await deleteTable('pagos');
+      await deleteTable('integrantes_grupo');
+      await deleteTable('creditos');
+      await deleteTable('cortes_diarios');
+      await deleteTable('grupos');
+      await deleteTable('clientes');
+
+      alert("Limpieza terminada con éxito. La página se recargará.");
+      window.location.reload();
     } catch (err) {
-      alert("Error: " + err.message);
+      alert("Fallo al limpiar: " + err.message);
     }
   };
 
