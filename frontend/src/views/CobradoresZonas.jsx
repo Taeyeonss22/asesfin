@@ -176,6 +176,7 @@ export default function CobradoresZonas({ session }) {
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       style={{ padding: '0.4rem', width: 'auto', background: 'var(--bg-glass)' }}
                     >
+                      <option value="SUPERADMIN">Súper Administrador</option>
                       <option value="ADMIN">Administrador</option>
                       <option value="OFICINA">Oficina / Call Center</option>
                       <option value="COBRADOR">Cobrador de Campo</option>
@@ -253,6 +254,7 @@ export default function CobradoresZonas({ session }) {
                   value={newUser.rol}
                   onChange={(e) => setNewUser({...newUser, rol: e.target.value})}
                 >
+                  <option value="SUPERADMIN">Súper Administrador</option>
                   <option value="ADMIN">Administrador</option>
                   <option value="OFICINA">Oficina / Call Center</option>
                   <option value="COBRADOR">Cobrador de Campo</option>

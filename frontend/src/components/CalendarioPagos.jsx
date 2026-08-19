@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
 import { enrichCreditData, calcularFechaProgramada } from '../lib/penalties';
+import PaymentHistoryModal from './PaymentHistoryModal';
 
 export default function CalendarioPagos({ creditoId }) {
   const [loading, setLoading] = useState(true);
@@ -12,6 +13,18 @@ export default function CalendarioPagos({ creditoId }) {
   const [faltas, setFaltas] = useState(0);
   const [costoFaltas, setCostoFaltas] = useState(0);
   const [moratorio, setMoratorio] = useState(0);
+  const [showHistory, setShowHistory] = useState(false);
+  const [perfil, setPerfil] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        supabase.from('perfiles').select('*').eq('id', session.user.id).single().then(({data}) => {
+          setPerfil(data);
+        });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (!creditoId) return;
@@ -126,6 +139,9 @@ export default function CalendarioPagos({ creditoId }) {
       <div className="flex justify-between items-center mb-3">
         <h4 className="text-muted uppercase tracking-wider text-xs flex items-center gap-2 m-0 border-none pb-0">
           <Calendar size={14} /> Calendario de Pagos
+          <button className="btn btn-ghost" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginLeft: '1rem' }} onClick={() => setShowHistory(true)}>
+            Ver Historial
+          </button>
         </h4>
         <div className="flex gap-3">
           {moratorio > 0 && (
@@ -188,6 +204,14 @@ export default function CalendarioPagos({ creditoId }) {
       <div className="text-xs text-muted mt-2">
         * Se calcula 1 falta por cada 3 semanas vencidas e incompletas. Actualmente hay {faltas * 3 + (calendario.filter(c => c.estaVencido).length % 3)} semanas vencidas.
       </div>
+
+      {showHistory && (
+        <PaymentHistoryModal 
+          creditoId={creditoId} 
+          perfil={perfil} 
+          onClose={() => setShowHistory(false)} 
+        />
+      )}
     </div>
   );
 }
