@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, AlertTriangle, CheckCircle, XCircle, Lock, ShieldCheck } from 'lucide-react';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
 import { enrichCreditData, calcularFechaProgramada } from '../lib/penalties';
 import PaymentHistoryModal from './PaymentHistoryModal';
@@ -25,6 +25,49 @@ export default function CalendarioPagos({ creditoId }) {
       }
     });
   }, []);
+
+  const handleLiquidarGarantia = async () => {
+    if (!credito || credito.garantia_liquida <= 0 || credito.estado_garantia === 'APLICADA') return;
+    
+    // Calculamos el saldo pendiente real
+    const totalPagado = pagos.reduce((sum, p) => sum + Number(p.monto), 0);
+    const saldoPendiente = Number(credito.total_a_pagar) - totalPagado;
+    
+    // El monto a abonar es el saldo pendiente o el total de la garantía, lo que sea menor
+    // (normalmente debería ser exactamente el saldo restante o menor)
+    const montoAbono = Math.min(Number(credito.garantia_liquida), saldoPendiente > 0 ? saldoPendiente : 0);
+
+    if (montoAbono <= 0) {
+      alert("El crédito ya no tiene saldo pendiente para liquidar.");
+      return;
+    }
+
+    if (!window.confirm(`¿Estás seguro de APLICAR la Garantía Líquida por $${montoAbono.toLocaleString()} como abono para liquidar el saldo?`)) return;
+
+    try {
+      // Registrar el pago
+      const { error: pagoError } = await supabase.from('pagos').insert({
+        credito_id: creditoId,
+        monto: montoAbono,
+        tipo: 'ABONO',
+        registrado_por: perfil?.id || null
+      });
+
+      if (pagoError) throw pagoError;
+
+      // Actualizar el estado de la garantía a APLICADA
+      const { error: updateError } = await supabase.from('creditos').update({
+        estado_garantia: 'APLICADA'
+      }).eq('id', creditoId);
+
+      if (updateError) throw updateError;
+
+      alert("Garantía Líquida aplicada exitosamente.");
+      window.location.reload(); // Recargar para refrescar todos los saldos (simplificado)
+    } catch (err) {
+      alert("Error aplicando garantía: " + err.message);
+    }
+  };
 
   useEffect(() => {
     if (!creditoId) return;
@@ -136,6 +179,35 @@ export default function CalendarioPagos({ creditoId }) {
 
   return (
     <div className="mt-6 mb-4 animate-fade-in">
+      {Number(credito?.garantia_liquida) > 0 && (
+        <div className="mb-4 solid-card" style={{ background: 'var(--bg-glass-strong)', border: '1px solid var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="flex items-center gap-3">
+            <div style={{ background: 'var(--primary)', color: 'white', padding: '0.75rem', borderRadius: '50%' }}>
+              <Lock size={20} />
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '1rem' }}>Bóveda de Garantía Líquida</h4>
+              <p className="text-muted text-sm m-0">Fondo de reserva del crédito</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary">
+                ${Number(credito.garantia_liquida).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+              </div>
+              <div className={`text-xs font-bold ${credito.estado_garantia === 'APLICADA' ? 'text-success' : 'text-warning'}`}>
+                ESTADO: {credito.estado_garantia || 'RETENIDA'}
+              </div>
+            </div>
+            {credito.estado_garantia !== 'APLICADA' && (
+              <button className="btn btn-primary" onClick={handleLiquidarGarantia}>
+                <ShieldCheck size={16} /> Aplicar para Liquidar
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-3">
         <h4 className="text-muted uppercase tracking-wider text-xs flex items-center gap-2 m-0 border-none pb-0">
           <Calendar size={14} /> Calendario de Pagos

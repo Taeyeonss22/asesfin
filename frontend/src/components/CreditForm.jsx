@@ -17,6 +17,7 @@ export default function CreditForm({ onClose, session }) {
     cliente_id: '',
     grupo_id: '',
     monto_otorgado: '',
+    garantia_liquida: '',
     periodicidad: 'SEMANAL',
     fecha_inicio: new Date().toISOString().split('T')[0],
   });
@@ -76,7 +77,12 @@ export default function CreditForm({ onClose, session }) {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let newFormData = { ...formData, [e.target.name]: e.target.value };
+    if (e.target.name === 'monto_otorgado') {
+      const parsed = parseFloat(e.target.value) || 0;
+      newFormData.garantia_liquida = (parsed * 0.10).toFixed(2);
+    }
+    setFormData(newFormData);
   };
 
   const handleGroupSelect = (e) => {
@@ -134,6 +140,11 @@ export default function CreditForm({ onClose, session }) {
       const totalAPagar = montoOtorgadoFinal * 1.20;
       const cuotaPeriodo = totalAPagar / numero_periodos;
 
+      let garantiaLiquidaTotal = parseFloat(formData.garantia_liquida) || 0;
+      if (formData.tipo === 'GRUPAL') {
+        garantiaLiquidaTotal = integrantes.reduce((acc, curr) => acc + (parseFloat(curr.monto_garantia) || 0), 0);
+      }
+
       // 1. Insert Credito (Parent)
       const payload = {
         zona_id: formData.zona_id,
@@ -146,6 +157,7 @@ export default function CreditForm({ onClose, session }) {
         periodicidad: formData.periodicidad,
         fecha_inicio: formData.fecha_inicio,
         numero_periodos: numero_periodos,
+        garantia_liquida: garantiaLiquidaTotal,
         creado_por: session.user.id
       };
 
@@ -264,6 +276,16 @@ export default function CreditForm({ onClose, session }) {
             <div className="form-group">
               <label>Monto Otorgado ($)</label>
               <input type="number" name="monto_otorgado" className="form-control" value={formData.monto_otorgado} onChange={handleChange} min="1" step="0.01" required />
+            </div>
+          </div>
+        )}
+
+        {formData.tipo === 'INDIVIDUAL' && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label>Garantía Líquida (Bóveda) ($)</label>
+              <input type="number" name="garantia_liquida" className="form-control" value={formData.garantia_liquida} onChange={handleChange} min="0" step="0.01" />
+              <span className="text-xs text-muted block mt-1">Sugerido: 10% del monto. Puede ser 0.</span>
             </div>
           </div>
         )}
