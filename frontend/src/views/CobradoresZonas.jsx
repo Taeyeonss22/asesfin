@@ -119,6 +119,9 @@ export default function CobradoresZonas({ session }) {
 
   if (loading) return <div className="p-4 text-muted">Cargando personal...</div>;
 
+  const currentUser = users.find(u => u.id === session?.user?.id);
+  const isSuperadmin = currentUser?.rol === 'SUPERADMIN';
+
   return (
     <div className="animate-fade-in relative">
       <div className="flex items-center justify-between mb-6">
@@ -180,8 +183,10 @@ export default function CobradoresZonas({ session }) {
                       value={u.rol} 
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       style={{ padding: '0.4rem', width: 'auto', background: 'var(--bg-glass)' }}
+                      disabled={!isSuperadmin}
+                      title={!isSuperadmin ? "Solo el Súper Administrador puede cambiar roles" : ""}
                     >
-                      <option value="SUPERADMIN">Súper Administrador</option>
+                      {isSuperadmin && <option value="SUPERADMIN">Súper Administrador</option>}
                       <option value="ADMIN">Administrador</option>
                       <option value="OFICINA">Oficina / Call Center</option>
                       <option value="COBRADOR">Cobrador de Campo</option>
@@ -255,11 +260,11 @@ export default function CobradoresZonas({ session }) {
               <div className="form-group mb-4">
                 <label>Rol</label>
                 <select 
-                  className="form-control"
+                  className="form-control" 
                   value={newUser.rol}
                   onChange={(e) => setNewUser({...newUser, rol: e.target.value})}
                 >
-                  <option value="SUPERADMIN">Súper Administrador</option>
+                  {isSuperadmin && <option value="SUPERADMIN">Súper Administrador</option>}
                   <option value="ADMIN">Administrador</option>
                   <option value="OFICINA">Oficina / Call Center</option>
                   <option value="COBRADOR">Cobrador de Campo</option>
