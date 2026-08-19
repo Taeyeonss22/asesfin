@@ -164,7 +164,12 @@ export default function CobradoresZonas({ session }) {
                         <Users size={16} className="text-muted" />
                       </div>
                       <div>
-                        <strong>{u.nombre_completo || 'Usuario Nuevo'}</strong>
+                        <strong>
+                          {u.nombre_completo || 'Usuario Nuevo'}
+                          {session?.user?.id === u.id && (
+                            <span className="badge badge-primary ml-2" style={{ padding: '0.1rem 0.4rem', fontSize: '0.7rem' }}>TÚ</span>
+                          )}
+                        </strong>
                         <div className="text-muted text-xs font-mono mt-1" style={{ opacity: 0.7 }}>ID: {u.id.substring(0,8)}...</div>
                       </div>
                     </div>
