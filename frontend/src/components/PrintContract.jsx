@@ -122,7 +122,7 @@ export default function PrintContract({ configEmpresa }) {
           .replace(/{{fecha_vencimiento}}/g, fechaVenc)
           .replace(/{{fecha_firma}}/g, fechaFirma)
           .replace(/{{nombre_aval}}/g, credito.aval_nombre || '')
-          .replace(/{{domicilio_aval}}/g, credito.aval_telefono || '')
+          .replace(/{{domicilio_aval}}/g, credito.aval_domicilio || '')
           .replace(/{{garantia_liquida}}/g, garantiaLiquida)
           .replace(/{{tabla_integrantes}}/g, tablaIntegrantes);
 

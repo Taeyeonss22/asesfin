@@ -20,6 +20,9 @@ export default function CreditForm({ onClose, session }) {
     garantia_liquida: '',
     periodicidad: 'SEMANAL',
     fecha_inicio: new Date().toISOString().split('T')[0],
+    aval_nombre: '',
+    aval_telefono: '',
+    aval_domicilio: '',
   });
 
   const [integrantes, setIntegrantes] = useState([]);
@@ -158,7 +161,10 @@ export default function CreditForm({ onClose, session }) {
         fecha_inicio: formData.fecha_inicio,
         numero_periodos: numero_periodos,
         garantia_liquida: garantiaLiquidaTotal,
-        creado_por: session.user.id
+        creado_por: session.user.id,
+        aval_nombre: formData.tipo === 'INDIVIDUAL' ? formData.aval_nombre : null,
+        aval_telefono: formData.tipo === 'INDIVIDUAL' ? formData.aval_telefono : null,
+        aval_domicilio: formData.tipo === 'INDIVIDUAL' ? formData.aval_domicilio : null,
       };
 
       const { data: credito, error: creditoError } = await supabase
@@ -286,6 +292,26 @@ export default function CreditForm({ onClose, session }) {
               <label>Garantía Líquida (Bóveda) ($)</label>
               <input type="number" name="garantia_liquida" className="form-control" value={formData.garantia_liquida} onChange={handleChange} min="0" step="0.01" />
               <span className="text-xs text-muted block mt-1">Sugerido: 10% del monto. Puede ser 0.</span>
+            </div>
+          </div>
+        )}
+
+        {formData.tipo === 'INDIVIDUAL' && (
+          <div style={{ padding: '1rem', background: 'var(--bg-glass-light)', borderRadius: '8px', marginBottom: '1rem', border: '1px solid var(--border-subtle)' }}>
+            <h4 className="text-sm uppercase tracking-wider mb-2 text-primary">Datos del Aval (Opcional)</h4>
+            <div className="form-group mb-2">
+              <label>Nombre Completo del Aval</label>
+              <input type="text" name="aval_nombre" className="form-control" value={formData.aval_nombre} onChange={handleChange} placeholder="Ej. Juan Pérez" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="form-group mb-0">
+                <label>Teléfono</label>
+                <input type="text" name="aval_telefono" className="form-control" value={formData.aval_telefono} onChange={handleChange} placeholder="555-1234-567" />
+              </div>
+              <div className="form-group mb-0">
+                <label>Domicilio</label>
+                <input type="text" name="aval_domicilio" className="form-control" value={formData.aval_domicilio} onChange={handleChange} placeholder="Calle 123" />
+              </div>
             </div>
           </div>
         )}
