@@ -58,16 +58,21 @@ export default function PrintTicket({ configEmpresa }) {
           .eq('credito_id', pago.credito_id)
           .single();
           
+        let saldo_base = 0;
+        let penalizaciones = 0;
+
         if (todosPagos) {
           allPagos = todosPagos;
           const saldoPendienteBase = parseFloat(vistaData?.saldo_pendiente || 0);
           const enriched = enrichCreditData(pago.creditos, todosPagos, saldoPendienteBase);
           if (enriched) {
              adeudo_actual = enriched.adeudo_total_real;
+             saldo_base = enriched.saldo_base;
+             penalizaciones = enriched.penalizaciones_pendientes;
           }
         }
         
-        setTicketData({ primary: pago, siblings: consolidated, adeudo_actual });
+        setTicketData({ primary: pago, siblings: consolidated, adeudo_actual, saldo_base, penalizaciones });
       }
       
       setTimeout(() => {
@@ -224,9 +229,21 @@ export default function PrintTicket({ configEmpresa }) {
 
         <div className="divider"></div>
 
-        <div className="row mt-2">
-          <span>Adeudo Restante:</span>
-          <span className="bold">${parseFloat(ticketData.adeudo_actual).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+        <div className="row mt-2" style={{ fontSize: '11px' }}>
+          <span>Saldo Capital:</span>
+          <span>${parseFloat(ticketData.saldo_base || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+        </div>
+        
+        {parseFloat(ticketData.penalizaciones || 0) > 0 && (
+          <div className="row mt-1" style={{ fontSize: '11px' }}>
+            <span>Moras Activas:</span>
+            <span>+ ${parseFloat(ticketData.penalizaciones || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+          </div>
+        )}
+
+        <div className="row mt-1 bold">
+          <span>Deuda Total Real:</span>
+          <span>${parseFloat(ticketData.adeudo_actual || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
         </div>
 
         <div className="row mt-1">
