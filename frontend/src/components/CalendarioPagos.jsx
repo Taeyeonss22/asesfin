@@ -90,10 +90,13 @@ export default function CalendarioPagos({ creditoId }) {
       
       setCredito(crData);
       
-      // 2. Obtener todos los pagos de este crédito
+      // 2. Obtener todos los pagos de este crédito y sus integrantes
       const { data: pgData, error: pgError } = await supabase
         .from('pagos')
-        .select('*')
+        .select(`
+          *,
+          integrantes_grupo(nombre_completo)
+        `)
         .eq('credito_id', creditoId);
         
       if (!pgError && pgData) {
@@ -245,28 +248,53 @@ export default function CalendarioPagos({ creditoId }) {
           </thead>
           <tbody>
             {calendario.map(periodo => (
-              <tr key={periodo.numero} className={periodo.estaVencido ? 'bg-red-500/10' : ''}>
-                <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{periodo.numero}</td>
-                <td>{format(periodo.fechaProgramada, 'dd/MM/yyyy')}</td>
-                <td style={{ textAlign: 'center' }}>${Number(credito.cuota_periodo).toLocaleString()}</td>
-                <td style={{ textAlign: 'center', color: periodo.totalAbonado > 0 ? 'var(--success)' : 'inherit' }}>
-                  ${periodo.totalAbonado.toLocaleString()}
-                  {periodo.pagos.length > 0 && (
-                    <div className="text-xs text-muted">
-                      ({periodo.pagos[periodo.pagos.length-1].fecha_pago ? format(new Date(periodo.pagos[periodo.pagos.length-1].fecha_pago), 'dd/MM/yyyy') : 'N/A'})
-                    </div>
-                  )}
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  {periodo.estaPagado ? (
-                    <span className="text-success flex justify-center items-center gap-1"><CheckCircle size={14}/> Pagado</span>
-                  ) : periodo.estaVencido ? (
-                    <span className="text-danger flex justify-center items-center gap-1 font-bold"><XCircle size={14}/> Pendiente</span>
-                  ) : (
-                    <span className="text-muted">Próximo</span>
-                  )}
-                </td>
-              </tr>
+              <React.Fragment key={periodo.numero}>
+                <tr className={periodo.estaVencido ? 'bg-red-500/10' : ''}>
+                  <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{periodo.numero}</td>
+                  <td>{format(periodo.fechaProgramada, 'dd/MM/yyyy')}</td>
+                  <td style={{ textAlign: 'center' }}>${Number(credito.cuota_periodo).toLocaleString()}</td>
+                  <td style={{ textAlign: 'center', color: periodo.totalAbonado > 0 ? 'var(--success)' : 'inherit' }}>
+                    ${periodo.totalAbonado.toLocaleString()}
+                    {periodo.pagos.length > 0 && (
+                      <div className="text-xs text-muted">
+                        ({periodo.pagos[periodo.pagos.length-1].fecha_pago ? format(new Date(periodo.pagos[periodo.pagos.length-1].fecha_pago), 'dd/MM/yyyy') : 'N/A'})
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    {periodo.estaPagado ? (
+                      <span className="text-success flex justify-center items-center gap-1"><CheckCircle size={14}/> Pagado</span>
+                    ) : periodo.estaVencido ? (
+                      <span className="text-danger flex justify-center items-center gap-1 font-bold"><XCircle size={14}/> Pendiente</span>
+                    ) : (
+                      <span className="text-muted">Próximo</span>
+                    )}
+                  </td>
+                </tr>
+                {/* Desglose Grupal */}
+                {credito.tipo === 'GRUPAL' && periodo.pagos.length > 0 && (
+                  <tr>
+                    <td colSpan="5" style={{ padding: 0, borderBottom: '2px solid var(--border-subtle)' }}>
+                      <div style={{ background: 'var(--bg-card)', padding: '0.5rem 1rem', fontSize: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                        {Object.entries(
+                          periodo.pagos.reduce((acc, p) => {
+                            if (p.tipo !== 'ABONO') return acc;
+                            const name = p.integrantes_grupo?.nombre_completo || 'General';
+                            if (!acc[name]) acc[name] = 0;
+                            acc[name] += Number(p.monto);
+                            return acc;
+                          }, {})
+                        ).map(([name, amount], idx) => (
+                          <div key={idx} className="flex gap-1">
+                            <span className="text-muted">{name}:</span>
+                            <span className="font-bold text-success">${amount.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
