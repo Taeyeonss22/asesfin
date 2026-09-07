@@ -90,12 +90,11 @@ export default function CalendarioPagos({ creditoId }) {
       
       setCredito(crData);
       
-      // 2. Obtener todos los abonos de este crédito
+      // 2. Obtener todos los pagos de este crédito
       const { data: pgData, error: pgError } = await supabase
         .from('pagos')
         .select('*')
-        .eq('credito_id', creditoId)
-        .eq('tipo', 'ABONO');
+        .eq('credito_id', creditoId);
         
       if (!pgError && pgData) {
         setPagos(pgData);
@@ -135,7 +134,7 @@ export default function CalendarioPagos({ creditoId }) {
       let fechaProgramada = calcularFechaProgramada(fechaInicio, i, credito.periodicidad);
       
       const pagosDelPeriodo = pagosAgrupados[i] || [];
-      const totalAbonado = pagosDelPeriodo.reduce((sum, p) => sum + Number(p.monto), 0);
+      const totalAbonado = pagosDelPeriodo.filter(p => p.tipo === 'ABONO').reduce((sum, p) => sum + Number(p.monto), 0);
       
       // ¿Está completo?
       // Usamos una tolerancia mínima (ej. 1 peso) por problemas de decimales
