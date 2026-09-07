@@ -45,8 +45,9 @@ export default function PaymentHistoryModal({ creditoId, onClose, perfil }) {
         }
       }
       
-      const { error } = await supabase.from('pagos').delete().eq('id', pago.id);
+      const { data, error } = await supabase.from('pagos').delete().eq('id', pago.id).select();
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No se pudo eliminar el pago. Es posible que el sistema haya bloqueado la acción por seguridad.");
       
       alert('Pago eliminado correctamente.');
       fetchPagos();
