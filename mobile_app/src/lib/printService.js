@@ -122,10 +122,22 @@ export const PrintService = {
             </div>
 
             <div class="divider"></div>
+            
+            <div class="row mt-2" style="font-size: 11px;">
+              <span>Saldo Capital:</span>
+              <span>$${(ticketData.saldo_base !== undefined ? ticketData.saldo_base : adeudo_actual).toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+            </div>
 
-            <div class="row mt-2">
-              <span>Adeudo Restante:</span>
-              <span class="bold">$${adeudo_actual.toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+            ${(ticketData.penalizaciones !== undefined ? ticketData.penalizaciones : 0) > 0 ? `
+            <div class="row mt-1" style="font-size: 11px;">
+              <span>Moras Activas:</span>
+              <span>+ $${ticketData.penalizaciones.toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
+            </div>
+            ` : ''}
+
+            <div class="row mt-1 bold">
+              <span>Deuda Total Real:</span>
+              <span>$${adeudo_actual.toLocaleString('es-MX', {minimumFractionDigits:2})}</span>
             </div>
             
             <div class="row mt-2">

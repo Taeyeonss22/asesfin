@@ -121,7 +121,9 @@ export default function HistorialScreen() {
           perfiles: { nombre_completo: 'Tú (Reimpresión)' }
         },
         siblings: siblings || [pago],
-        adeudo_actual: enriched ? enriched.adeudo_total_real : 0
+        adeudo_actual: enriched ? enriched.adeudo_total_real : (creditoRow?.saldo_pendiente || pago.creditos.saldo_pendiente),
+        saldo_base: enriched ? enriched.saldo_base : (creditoRow?.saldo_pendiente || pago.creditos.saldo_pendiente),
+        penalizaciones: enriched ? enriched.penalizaciones_pendientes : 0
       };
 
       await PrintService.printTicket(ticketData, configData);

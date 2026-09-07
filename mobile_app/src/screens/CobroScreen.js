@@ -13,6 +13,7 @@ import * as Network from 'expo-network';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
+import { enrichCreditData } from '../lib/penalties';
 
 export default function CobroScreen({ route }) {
   const { credito, location: initialLocation, perfil } = route.params;
@@ -209,17 +210,34 @@ export default function CobroScreen({ route }) {
       };
 
       if (isOnline) {
-        const { data, error } = await supabase.from('pagos').insert(inserts).select();
+        const { data: insertsData, error } = await supabase.from('pagos').insert(inserts).select(`
+          *,
+          perfiles(nombre_completo),
+          integrantes_grupo(nombre_completo)
+        `);
         if (error) {
            throw new Error(`Error guardando el pago y sus metadatos: ${error.message}`);
         }
         
+        // Fetch remaining data for print
+        const { data: allPagos } = await supabase.from('pagos').select('*').eq('credito_id', credito.credito_id);
+        const { data: vistaData } = await supabase.from('vista_saldos_creditos').select('saldo_pendiente').eq('credito_id', credito.credito_id).single();
+        const enriched = enrichCreditData(credito, allPagos || [], parseFloat(vistaData?.saldo_pendiente || credito.saldo_pendiente));
+        
+        const finalPagoForTicket = {
+          primary: { ...pagoForTicket, perfiles: { nombre_completo: perfil?.nombre_completo || 'Cobrador' } },
+          siblings: insertsData || [pagoForTicket],
+          adeudo_actual: enriched ? enriched.adeudo_total_real : (vistaData?.saldo_pendiente || credito.saldo_pendiente),
+          saldo_base: enriched ? enriched.saldo_base : (vistaData?.saldo_pendiente || credito.saldo_pendiente),
+          penalizaciones: enriched ? enriched.penalizaciones_pendientes : 0
+        };
+
         const { data: configData } = await supabase.from('configuracion_empresa').select('*').limit(1).single();
         
         Alert.alert('Éxito', 'Pago(s) registrado(s) correctamente.\n\n¿Deseas imprimir el ticket?', [
           { text: 'No', onPress: () => navigation.goBack() },
           { text: 'Sí, Imprimir', onPress: async () => {
-              await PrintService.printTicket(pagoForTicket, configData);
+              await PrintService.printTicket(finalPagoForTicket, configData);
               navigation.goBack();
           }}
         ]);
