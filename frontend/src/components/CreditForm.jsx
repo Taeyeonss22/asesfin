@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import Select from 'react-select';
 import Modal from './Modal';
+import { calcularFechaProgramada } from '../lib/penalties';
+import { format } from 'date-fns';
 
 export default function CreditForm({ onClose, session }) {
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,8 @@ export default function CreditForm({ onClose, session }) {
     monto_otorgado: '',
     garantia_liquida: '',
     periodicidad: 'SEMANAL',
+    numero_periodos: '16',
+    interes: '20',
     fecha_inicio: new Date().toISOString().split('T')[0],
     aval_nombre: '',
     aval_telefono: '',
@@ -85,6 +89,12 @@ export default function CreditForm({ onClose, session }) {
       const parsed = parseFloat(e.target.value) || 0;
       newFormData.garantia_liquida = (parsed * 0.10).toFixed(2);
     }
+    if (e.target.name === 'periodicidad') {
+      if (e.target.value === 'DIARIA') newFormData.numero_periodos = '20';
+      else if (e.target.value === 'SEMANAL') newFormData.numero_periodos = '16';
+      else if (e.target.value === 'CATORCENAL' || e.target.value === 'QUINCENAL') newFormData.numero_periodos = '8';
+      else if (e.target.value === 'MENSUAL') newFormData.numero_periodos = '4';
+    }
     setFormData(newFormData);
   };
 
@@ -134,13 +144,10 @@ export default function CreditForm({ onClose, session }) {
         throw new Error("El monto otorgado debe ser mayor a 0");
       }
 
-      let numero_periodos = 16;
-      if (formData.periodicidad === 'DIARIA') numero_periodos = 20;
-      else if (formData.periodicidad === 'SEMANAL') numero_periodos = 16;
-      else if (formData.periodicidad === 'CATORCENAL' || formData.periodicidad === 'QUINCENAL') numero_periodos = 8;
-      else if (formData.periodicidad === 'MENSUAL') numero_periodos = 4;
+      let numero_periodos = parseInt(formData.numero_periodos) || 16;
+      let interes_porcentaje = parseFloat(formData.interes) || 20;
 
-      const totalAPagar = montoOtorgadoFinal * 1.20;
+      const totalAPagar = montoOtorgadoFinal * (1 + (interes_porcentaje / 100));
       const cuotaPeriodo = totalAPagar / numero_periodos;
 
       let garantiaLiquidaTotal = parseFloat(formData.garantia_liquida) || 0;
@@ -184,8 +191,8 @@ export default function CreditForm({ onClose, session }) {
             cliente_id: int.cliente_id,
             nombre_completo: int.nombre_completo,
             monto_otorgado: m,
-            total_a_pagar: m * 1.20,
-            cuota_periodo: (m * 1.20) / numero_periodos,
+            total_a_pagar: m * (1 + (interes_porcentaje / 100)),
+            cuota_periodo: (m * (1 + (interes_porcentaje / 100))) / numero_periodos,
             monto_garantia: parseFloat(int.monto_garantia) || 0,
           };
         });
@@ -253,6 +260,18 @@ export default function CreditForm({ onClose, session }) {
           <div className="form-group">
             <label>Fecha de Inicio</label>
             <input type="date" name="fecha_inicio" className="form-control" value={formData.fecha_inicio} onChange={handleChange} required />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="form-group">
+            <label>Nro Cuotas</label>
+            <input type="number" name="numero_periodos" className="form-control" value={formData.numero_periodos} onChange={handleChange} min="1" required />
+          </div>
+
+          <div className="form-group">
+            <label>Interés (%)</label>
+            <input type="number" name="interes" className="form-control" value={formData.interes} onChange={handleChange} min="0" step="0.1" required />
           </div>
         </div>
 
@@ -356,6 +375,54 @@ export default function CreditForm({ onClose, session }) {
             )}
           </>
         )}
+
+        {(() => {
+          const periods = parseInt(formData.numero_periodos) || 0;
+          const interest = parseFloat(formData.interes) || 0;
+          
+          let baseAmount = parseFloat(formData.monto_otorgado) || 0;
+          if (formData.tipo === 'GRUPAL') {
+            baseAmount = integrantes.reduce((acc, curr) => acc + (parseFloat(curr.monto_otorgado) || 0), 0);
+          }
+          
+          if (periods <= 0 || baseAmount <= 0) return null;
+          
+          const total = baseAmount * (1 + (interest / 100));
+          const cuota = total / periods;
+          
+          return (
+            <div className="mt-6 mb-4">
+              <h4 className="text-sm font-bold uppercase tracking-wider mb-2 text-primary">Listado de Cuotas (Vista Previa)</h4>
+              <div className="table-container" style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--border-subtle)' }}>
+                <table>
+                  <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-glass-strong)' }}>
+                    <tr>
+                      <th style={{ textAlign: 'center' }}>N° C.</th>
+                      <th>Fecha de Pago</th>
+                      <th style={{ textAlign: 'right' }}>Monto Cuota</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: periods }).map((_, i) => {
+                      const d = calcularFechaProgramada(formData.fecha_inicio, i + 1, formData.periodicidad);
+                      return (
+                        <tr key={i}>
+                          <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{i + 1}</td>
+                          <td>{format(d, 'dd/MM/yyyy')}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>${cuota.toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-between items-center mt-2 text-sm">
+                <span className="text-muted">Préstamo Base: <b>${baseAmount.toLocaleString('es-MX', {minimumFractionDigits: 2})}</b></span>
+                <span className="font-bold">Total a Pagar (Capital + Int): <span className="text-danger">${total.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span></span>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="flex justify-between mt-6">
           <button type="button" className="btn btn-outline" onClick={onClose}>
