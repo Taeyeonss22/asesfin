@@ -19,7 +19,7 @@ export default function CreditosIndividuales({ session }) {
       .from('vista_saldos_creditos')
       .select('*')
       .eq('tipo', 'INDIVIDUAL')
-      .order('credito_id', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (!error && data) {
       setCredits(data);

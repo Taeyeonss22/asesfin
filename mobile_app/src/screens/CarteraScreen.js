@@ -40,7 +40,7 @@ export default function CarteraScreen() {
         .from('vista_saldos_creditos')
         .select('*')
         .eq('estado', 'ACTIVO')
-        .order('fecha_inicio', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching cartera:', error);

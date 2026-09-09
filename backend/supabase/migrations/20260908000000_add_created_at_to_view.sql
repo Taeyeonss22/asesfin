@@ -1,12 +1,4 @@
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='creditos' AND column_name='garantia_liquida') THEN
-        ALTER TABLE creditos ADD COLUMN garantia_liquida NUMERIC DEFAULT 0;
-        ALTER TABLE creditos ADD COLUMN estado_garantia TEXT CHECK (estado_garantia IN ('RETENIDA', 'APLICADA', 'DEVUELTA')) DEFAULT 'RETENIDA';
-    END IF;
-END $$;
-
--- Recrear la vista de saldos para incluir garantia
+-- Add created_at to vista_saldos_creditos
 DROP VIEW IF EXISTS vista_saldos_creditos CASCADE;
 CREATE VIEW vista_saldos_creditos WITH (security_invoker = on) AS
 SELECT 
@@ -25,6 +17,7 @@ SELECT
   c.total_a_pagar,
   c.garantia_liquida,
   c.estado_garantia,
+  c.created_at,
   COALESCE(SUM(p.monto), 0) as total_pagado,
   c.total_a_pagar - COALESCE(SUM(p.monto), 0) as saldo_pendiente
 FROM creditos c
@@ -48,4 +41,5 @@ GROUP BY
   c.cuota_periodo,
   c.total_a_pagar,
   c.garantia_liquida,
-  c.estado_garantia;
+  c.estado_garantia,
+  c.created_at;

@@ -1,0 +1,5 @@
+- [ ] Add `numero_periodos` and `interes` to `formData` state in `CreditForm.jsx`.
+- [ ] Update `handleChange` to dynamically suggest defaults for `numero_periodos` when `periodicidad` changes.
+- [ ] Add input fields for "Nro Cuotas" and "Interés (%)" to the UI.
+- [ ] Create a `Preview` table logic that maps over `numero_periodos` and uses `calcularFechaProgramada` to show dates and amounts.
+- [ ] Update `handleSubmit` to use the dynamic `numero_periodos` and `interes` to calculate `total_a_pagar` and `cuota_periodo`.

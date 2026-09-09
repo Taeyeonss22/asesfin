@@ -19,7 +19,7 @@ export default function CreditosGrupales({ session }) {
       .from('vista_saldos_creditos')
       .select('*')
       .eq('tipo', 'GRUPAL')
-      .order('credito_id', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (!error && data) {
       setCredits(data);

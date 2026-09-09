@@ -23,7 +23,8 @@ export default function CorteScreen() {
         .from('pagos')
         .select(`
           *,
-          creditos (nombre_cliente, tipo)
+          creditos (tipo, nombre_cliente, clientes(nombre_completo), grupos(nombre)),
+          integrantes_grupo (nombre_completo)
         `)
         .eq('registrado_por', userId)
         .is('corte_id', null)
@@ -173,7 +174,10 @@ export default function CorteScreen() {
                   <View key={p.id} style={[styles.pagoItem, index === pagos.length - 1 && { borderBottomWidth: 0 }]}>
                     <View style={styles.pagoLeft}>
                       <Text style={styles.pagoClient}>
-                        {p.creditos?.nombre_cliente || `Folio: ${p.credito_id.substring(0,8)}`}
+                        {p.creditos?.tipo === 'INDIVIDUAL' 
+                          ? (p.creditos?.nombre_cliente || p.creditos?.clientes?.nombre_completo || `Folio: ${p.credito_id.substring(0,8)}`)
+                          : (p.integrantes_grupo?.nombre_completo || p.creditos?.grupos?.nombre || `Folio: ${p.credito_id.substring(0,8)}`)
+                        }
                       </Text>
                       <Text style={styles.pagoTime}>
                         {new Date(p.fecha_pago).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {p.tipo}
