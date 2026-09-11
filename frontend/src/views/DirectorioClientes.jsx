@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { CreditCard, RefreshCw, Search, Plus, UserPlus } from 'lucide-react';
+import { CreditCard, RefreshCw, Search, Plus, UserPlus, Eye, Activity } from 'lucide-react';
 import Modal from '../components/Modal';
+import ClientProfileModal from '../components/ClientProfileModal';
 
 export default function DirectorioClientes() {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState(null);
   
   const [formData, setFormData] = useState({
     nombre_completo: '',
@@ -150,12 +152,13 @@ export default function DirectorioClientes() {
                 <th>Dirección</th>
                 <th>Estado</th>
                 <th>Crédito Activo</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredClientes.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center text-muted" style={{ padding: '3rem' }}>
+                  <td colSpan="6" className="text-center text-muted" style={{ padding: '3rem' }}>
                     {searchTerm ? 'No se encontraron clientes.' : 'No hay clientes registrados.'}
                   </td>
                 </tr>
@@ -171,6 +174,16 @@ export default function DirectorioClientes() {
                       </span>
                     </td>
                     <td>{c.tipoCreditoActivo}</td>
+                    <td>
+                      <button 
+                        className="btn btn-outline" 
+                        style={{ padding: '4px 8px' }}
+                        onClick={() => setSelectedClientId(c.id)}
+                        title="Ver Perfil e Historial"
+                      >
+                        <Eye size={16} /> Ver Historial
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -230,6 +243,13 @@ export default function DirectorioClientes() {
             </div>
           </form>
         </Modal>
+      )}
+
+      {selectedClientId && (
+        <ClientProfileModal 
+          clientId={selectedClientId} 
+          onClose={() => setSelectedClientId(null)} 
+        />
       )}
     </div>
   );
